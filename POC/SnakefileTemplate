@@ -1,0 +1,26 @@
+# To run pipeline, rename this to "Snakefile"
+# Choose to which Phase you wish the pipeline to run (P1-P4)
+# Call "snakemake" to run.
+
+#Generate your own .yaml config file.
+configfile: "Pipeline1.yaml"
+
+# Phase 1: Fastq generation from a BAM file
+include: "SAMtoFastq"
+
+# Phrase 2: BAM generation from a Fastq file
+include: "alignBAM"
+
+# Phase 3: Sorting of the BAM file
+include: "sortBAM"
+
+# Phase 4: Indexing of a BAM file
+include: "indexBAM"
+
+# Uncomment the corresponding phase you wish to pipeline to.
+rule all:
+    input: 
+#           expand("fastq/{samples}.{version}.fastq", samples=config["sample"], version=config["version"])      #P1:SAMtoFastq
+#           expand("bam/{samples}_realigned.bam", samples=config["sample"])                                     #P2:alignBAM
+#           expand("bam/{samples}_realigned_sorted.bam", samples=config["sample"])                              #P3:sortBAM
+           expand("bam/{samples}_realigned_sorted.bam.bai", samples=config["sample"])                          #P4:indexBAM

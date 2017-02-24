@@ -1,0 +1,15 @@
+#Author:    Tim Boyarski
+#Date:	    2017-02-06
+#Conda Env: py351wSnake
+
+# Rule specific configurations set in the cluster.json file
+# Called:       "snakemake bam/Pfeiffer_realigned.bam"
+
+rule alignBAM:
+    input:
+        expand("fastq/{samples}.{version}.fastq", samples=config["sample"], version=config["version"])
+    output:
+        expand("bam/{samples}_realigned.bam", samples=config["sample"])
+    shell: 
+         "~/share/usr/bwa-0.7.5a/bwa mem ref/GRCh37-lite.fa {input[0]} {input[1]} " \
+         "| samtools view -bhS - > {output}"

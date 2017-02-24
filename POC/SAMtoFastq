@@ -1,0 +1,17 @@
+#Author:    Tim Boyarski
+#Date:	    2017-02-06
+#Conda Env: py351wSnake
+
+# Rule specific configurations set in the cluster.json file
+# Called:       "snakemake fastq/Pfeiffer.{1,2}.fastq" 
+
+rule SAMtoFastq:
+    input: 
+        expand("bam/{samples}.bam", samples=config["sample"])
+    output:
+        expand("fastq/{samples}.{version}.fastq", samples=config["sample"], version=config["version"])
+    shell:  "~/share/usr/anaconda/2.2.0/bin/java -Xmx2G -jar " \
+            "~/share/usr/picard-tools/2.8.1/build/libs/picard.jar SamToFastq " \
+            "I={input} " \
+            "FASTQ={output[0]} " \
+            "SECOND_END_FASTQ={output[1]}"
