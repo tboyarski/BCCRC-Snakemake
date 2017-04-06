@@ -1,5 +1,0 @@
-# Overwrite during run-time using CMD-line arguments like: snakemake --config sample=NotPfeiffer --jobs 100 <otherArgs> ...
-
-# Variables used to run pipeline.
-sample : Pfeiffer
-version : [1, 2]
