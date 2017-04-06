@@ -1,0 +1,16 @@
+
+
+
+1) Check you have Java 7+
+2) Create directory to download files into
+3) From this directory,enter " curl -fsSL get.nextflow.io | bash"
+4) Modify your path variables by adding this to your .bashrc:
+        export PATH=$HOME/share/usr/nextflow/0.23.3/:$PATH
+5) Call "./nextflow run hello"
+
+    You will see:
+            N E X T F L O W  ~  version 0.23.3
+            Pulling nextflow-io/hello ...
+            API rate limit exceeded -- Provide your GitHub user name and password to get a higher rate limit
+
+6) Troubleshooting the API rate limit issue.

@@ -1,0 +1,48 @@
+help ***START*******************************************************************************************
+help Author:    Tim Boyarski
+help Date:      2017-02-17
+help ***************************************************************************************************
+help bdsFileParsePair.bds will take an input file and read it. It will create a hash-map based on 
+help    key-value pairings. It will return a hash-map "string{}", which contains the parsed values.
+help        Input File Requirements:
+help            -File must be of format ".txt"
+help            -Pairs must be on the same line in the file.
+help            -Pairs must be separated by either a space or a tab. CSV not currently supported.
+help ***************************************************************************************************
+help Call using the following command:  bdsFileParsePair(SAMPLE_FILE)
+help    SAMPLE_FILE = "FileName"    --- The name of the file which contains key-value pairings. 
+help ***CODE********************************************************************************************
+help Sample call; Copy and paste this into your script:
+help include "bdsFileParsePairs.bds"
+help SAMPLE_FILE := "FileName.txt"
+help bdsFileParsePair(SAMPLE_FILE)
+help ********OTHER************
+help Set opCode flag to pipe code, use: bds bdsAlign.bds -opCodeAlign >> bdsYours.bds
+opCodeFileParsePair := false     help Set true to generate code to call bds script ~ script building
+help ***END*********************************************************************************************
+
+if(opCodeFileParsePair){
+    print("include \"bdsFileParsePair.bds\"\n")
+    print("SAMPLE_FILE := \"FileName.txt\"\n")
+    print("bdsFileParsePair(SAMPLE_FILE)\n")
+    print("\n\n")
+}
+
+# Call to produce a string hash-map from key-value pairs in file.
+string{} bdsFileParsePair(string SAMPLE_FILE){
+	println "We are using file <$SAMPLE_FILE>"
+	
+	# Declare variables to be used in file parsing.
+	string[] fileLines = SAMPLE_FILE.readLines()	# Read the file, line by line, into a variable
+	string regExpression = "[ ]{1,}|[\t]{1,}"		# File parse using regEx "[[[:space:]]*|\t*]" ~ Any whitespace character
+	string[] fileWords				# Temp array to hold the paired values; will be used to generate HashMap
+	string{} samplePairHash				# Hashmap to store the same pair
+
+	# Using each two-word line parsed from the file, generate hash map
+	for(string fileLine : fileLines){
+	    fileWords = fileLine.split(regExpression)
+	    samplePairHash{fileWords[0]} = fileWords[1]
+	}
+
+	return samplePairHash
+}

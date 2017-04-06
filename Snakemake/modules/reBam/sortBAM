@@ -1,0 +1,32 @@
+#---------------------------------------------------------------
+# Author:   Tim Boyarski                                        
+# Date:	    2017-03-06                                          
+#---------------------------------------------------------------
+# Input:                                            .BAM        
+# Output:                                           _sorted.BAM 
+# Purpose: Produce a sorted BAM file, using samtools or biobam. 
+#---------------------------------------------------------------
+from time import localtime, strftime
+from subprocess import call
+
+rule sortBAM:
+    input:
+        expand("{outputDIR}/{reBamDIR}/{{samples}}.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"])
+    output:
+        expand("{outputDIR}/{reBamDIR}/{{samples}}_sorted.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"])
+    params:
+        #Generate output suffix to be used for Samtools 0.1.18, which cannot use a filename flag
+        outputSUFFIX = config["outputDIR"] + "/" + config["reBamDIR"] + "/{samples}_sorted",
+        logNAME="sortBAM." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["reBamDIR"]
+    run:
+        if config["sortProg"] == "samtools":
+            call(   config["sortBAM_samtoolsProg"] + ' sort ' + str(input) + ' ' + str(params.outputSUFFIX) \
+            + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.samtools.stderr', shell=True)
+        else:
+            call(config["sortBAM_samtoolsProg"] + ' view -b ' + str(input) \
+            + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.samtools.stderr' \
+            + ' | ' + config["sortBAM_bamsortProg"] + ' SO=coordinate tmpfile=' + str(output) + '.tmp > ' + str(output) \ 
+            + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.bamsort.stderr', shell=True)
+#-------------------------------------------------------------------------------------------------------

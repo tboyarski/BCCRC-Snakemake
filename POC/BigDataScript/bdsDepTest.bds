@@ -1,0 +1,29 @@
+#Author:    Tim Boyarski
+#Date:	    2017-02-07
+
+# Set sample file name.
+SAMPLE:= "Pfeiffer"			help The core name of your file.
+string[] tid
+
+include "bdsFastq.bds"
+FASTQ_BAM_DIR := "bam"
+FASTQ_FASTQ_DIR := "fastq"
+tid += bdsFastq(SAMPLE, FASTQ_BAM_DIR, FASTQ_FASTQ_DIR)
+
+
+include "bdsSort.bds"
+SORT_BAM_DIR := "bam"
+tid += bdsSort(SAMPLE, SORT_BAM_DIR)
+
+
+include "bdsIndex.bds"
+INDEX_BAM_DIR := "bam"
+tid += bdsIndex(SAMPLE, INDEX_BAM_DIR)
+
+
+include "bdsAlign.bds"
+ALIGN_BAM_DIR := "bam"
+ALIGN_FASTQ_DIR := "fastq"
+tid += bdsAlign(SAMPLE, ALIGN_BAM_DIR, ALIGN_FASTQ_DIR)
+
+goal tid

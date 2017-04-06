@@ -1,0 +1,41 @@
+{
+    "rmdupBAM": {
+        "clusterSpec": "-V -S /bin/bash -o log/reBam -e log/reBam -l h_vmem=10G -pe ncpus 1"
+    },
+    "mpileup2snp": {
+        "clusterSpec": "-V -S /bin/bash -o log/varScan -e log/varScan -l h_vmem=10G -pe ncpus 1"
+    },
+    "undoBAM": {
+        "clusterSpec": "-V -S /bin/bash -o log/reBam -e log/reBam -l h_vmem=10G -pe ncpus 1"
+    },
+    "alignBAM": {
+        "clusterSpec": "-V -S /bin/bash -o log/reBam -e log/reBam -l h_vmem=10G -pe ncpus 1"
+    },
+    "mpileup2indel": {
+        "clusterSpec": "-V -S /bin/bash -o log/varScan -e log/varScan -l h_vmem=10G -pe ncpus 1"
+    },
+    "sortBAM": {
+        "clusterSpec": "-V -S /bin/bash -o log/reBam -e log/reBam -l h_vmem=10G -pe ncpus 1"
+    },
+    "somatic": {
+        "clusterSpec": "-V -S /bin/bash -o log/varScan -e log/varScan -l h_vmem=10G -pe ncpus 1"
+    },
+    "__default__": {
+        "clusterSpec": "-V -S /bin/bash -o log -e log -l h_vmem=10G -pe ncpus 1"
+    },
+    "mPileSPLIT": {
+        "clusterSpec": "-V -S /bin/bash -o log/mPile -e log/mPile -l h_vmem=10G -pe ncpus 1"
+    },
+    "indexBAM": {
+        "clusterSpec": "-V -S /bin/bash -o log/reBam -e log/reBam -l h_vmem=10G -pe ncpus 1"
+    },
+    "muTect": {
+        "clusterSpec": "-V -S /bin/bash -o log/muTect -e log/muTect -l h_vmem=10G -pe ncpus 1"
+    },
+    "mPileUNSPLIT": {
+        "clusterSpec": "-V -S /bin/bash -o log/mPile -e log/mPile -l h_vmem=10G -pe ncpus 1"
+    },
+    "filteredBAM": {
+        "clusterSpec": "-V -S /bin/bash -o log/reBam -e log/reBam -l h_vmem=10G -pe ncpus 1"
+    }
+}

@@ -1,0 +1,25 @@
+#-------------------------------------------------------------------
+# Author:   Tim Boyarski                                            
+# Date:	    2017-03-07                                              
+#-------------------------------------------------------------------
+# Input:                                            .BAM            
+# Output:                                           _filtered.BAM   
+# Purpose: Produce a filtered BAM file.                             
+#-------------------------------------------------------------------
+from time import localtime, strftime
+from subprocess import call
+
+rule filteredBAM:
+    input:
+        expand("{outputDIR}/{reBamDIR}/{{samples}}.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"])
+    output:
+        expand("{outputDIR}/{reBamDIR}/{{samples}}_filtered.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"])
+    params:
+        bitFLAG=config["bitFLAG"],
+        logNAME="filteredBAM." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["reBamDIR"]
+    run:
+        call(config["filteredBAM_samtoolsProg"] + ' view -bh -F ' + str(params.bitFLAG) + ' ' + str(input) + ' > ' + str(output) \
+        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.samtools.stderr', shell=True)
+#-------------------------------------------------------------------------------------------------------

@@ -1,0 +1,56 @@
+help ***START*******************************************************************************************
+help Author:    Tim Boyarski
+help Date:      2017-02-17
+help ***************************************************************************************************
+help bdsFileParseSingle.bds will take an input file and read it. It will create an array from the list 
+help    of words inside of the text file. 
+help        Input File Requirements:
+help            -File must be of format ".txt"
+help            -Words must be on separate lines
+help ***************************************************************************************************
+help Call using the following command:  bdsFileParseSingle(SAMPLE_FILE)
+help    SAMPLE_FILE = "FileName"    --- The name of the file which contains key-value pairings. 
+help ***CODE********************************************************************************************
+help Sample call; Copy and paste this into your script:
+help include "bdsFileParseSingle.bds"
+help SAMPLE_FILE := "FileName.txt"
+help bdsFileParseSingle(SAMPLE_FILE)
+help ********OTHER************
+help Set opCode flag to pipe code, use: bds bdsAlign.bds -opCodeAlign >> bdsYours.bds
+opCodeFileParseSingle := false     help Set true to generate code to call bds script ~ script building
+help ***END*********************************************************************************************
+
+if(opCodeFileParseSingle){
+    print("include \"bdsFileParseSingle.bds\"\n")
+    print("SAMPLE_FILE := \"FileName.txt\"\n")
+    print("bdsFileParseSingle(SAMPLE_FILE)\n")
+    print("\n\n")
+}
+
+# Call to produce a string array from a list of words in file.
+string[] bdsFileParseSingle(string SAMPLE_FILE){
+	println "We are using file <$SAMPLE_FILE>"
+	
+	# Declare variables to be used in file parsing.
+	string[] fileLines = SAMPLE_FILE.readLines()	# Read the file, line by line, into a variable
+
+    # Trim whitespace from each value in array.
+    for(int i = 0; i < fileLines.size(); i++){
+        fileLines[i] = fileLines[i].trim()
+    }
+    
+
+
+
+#	string regExpression = "[ ]{1,}|[\t]{1,}"		# File parse using regEx "[[[:space:]]*|\t*]" ~ Any whitespace character
+#	string[] fileWords				# Temp array to hold the paired values; will be used to generate HashMap
+#	string{} samplePairHash				# Hashmap to store the same pair
+
+	# Using each two-word line parsed from the file, generate hash map
+#	for(string fileLine : fileLines){
+#	    fileWords = fileLine.split(regExpression)
+#	    samplePairHash{fileWords[0]} = fileWords[1]
+#	}
+
+	return fileLines
+}

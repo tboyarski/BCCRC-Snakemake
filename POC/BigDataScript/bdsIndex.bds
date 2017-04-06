@@ -1,0 +1,44 @@
+help ***START*******************************************************************************************
+help Author:    Tim Boyarski
+help Date:	    2017-02-14
+help ***************************************************************************************************
+help bdsIndex.bds will take a "sorted" BAM file, and it will generate an "index" .BAM.BAI file.
+help ***************************************************************************************************
+help Call using the following command: bdsIndex(SAMPLE, INDEX_BAM_DIR)
+help    SAMPLE = "SampleName"       --- Code name of the file set (E.g. If started with Pfeiffer.bam,
+help                                            set this to 'Pfeiffer')
+help    INDEX_BAM_DIR = "bam"       --- Relative path//directory from .bds to .bam; read/write location 
+help                                            (E.g. If want into './bam/', set this to 'bam')
+help ***************************************************************************************************
+help Using the previous setup, these file names will be generated.
+help        IndexIn = BAM File : "$INDEX_BAM_DIR/$SAMPLE" + "_realigned_sorted.bam"
+help        IndexOut = Indexed BAM File : "$INDEX_BAM_DIR/$SAMPLE" + "_realigned_sorted.bam.bai"
+help ***CODE********************************************************************************************
+help include "bdsIndex.bds"
+help INDEX_BAM_DIR := "bam"
+help bdsIndex(SAMPLE, INDEX_BAM_DIR)
+help ********OTHER************
+help Set opCode flag to pipe code, use: bds bdsIndex.bds -opCodeIndex >> bdsYours.bds
+opCodeIndex := false     help Set true to generate code to call bds script ~ script building
+help ***END*********************************************************************************************
+
+if(opCodeIndex){
+    print("include \"bdsIndex.bds\"\n")
+    print("INDEX_BAM_DIR := \"bam\"\n")
+    print("tid += bdsIndex(SAMPLE, INDEX_BAM_DIR)\n")
+    print("\n\n")
+}
+
+
+# Call to produce re-aligned and indexed BAM file from a BAM file.
+string bdsIndex(string SAMPLE, string INDEX_BAM_DIR){
+
+	# Generate file names fromm input string.
+	IndexIn := "$INDEX_BAM_DIR/$SAMPLE" + "_realigned_sorted.bam"
+	IndexOut := "$INDEX_BAM_DIR/$SAMPLE" + "_realigned_sorted.bam.bai"
+
+	#Run the task.
+	return dep (IndexOut <- IndexIn, taskName:="bdsIndex") {
+		sys ~/share/usr/samtools/1.3.1/bin/samtools index $IndexIn $IndexOut
+	}
+}

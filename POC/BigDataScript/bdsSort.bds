@@ -1,0 +1,45 @@
+help ***START*******************************************************************************************
+help Author:    Tim Boyarski
+help Date:	    2017-02-14
+help ***************************************************************************************************
+help bdsSort.bds will take a "realigned" BAM file, and it will generate a "sorted" .BAM.
+help ***************************************************************************************************
+help Call using the following command:  bdsSort(SAMPLE, SORT_BAM_DIR)
+help    SAMPLE = "SampleName"       --- Code name of the file set (E.g. If started with Pfeiffer.bam,
+help                                            set this to 'Pfeiffer')
+help    SORT_BAM_DIR = "bam"        --- Relative path//directory from .bds to .bam; read/write location 
+help                                            (E.g. If want into './bam/', set this to 'bam')
+help ***************************************************************************************************
+help Using the previous setup, these file names will be generated.
+help        SortIn = BAM File : "$SORT_BAM_DIR/$SAMPLE" + "_realigned.bam"
+help        SortOut = Sorted BAM File : "$SORT_BAM_DIR/$SAMPLE" + "_realigned_sorted.bam"
+help ***CODE********************************************************************************************
+help include "bdsSort.bds"
+help SORT_BAM_DIR := "bam"
+help bdsSort(SAMPLE, SORT_BAM_DIR)
+help ********OTHER************
+help Set opCode flag to pipe code, use: bds bdsSort.bds -opCodeSort >> bdsYours.bds
+opCodeSort := false     help Set true to generate code to call bds script ~ script building
+help ***END*********************************************************************************************
+
+if(opCodeSort){
+    print("include \"bdsSort.bds\"\n")
+    print("SORT_BAM_DIR := \"bam\"\n")
+    print("tid += bdsSort(SAMPLE, SORT_BAM_DIR)\n")
+    print("\n\n")
+}
+
+
+# Call to produce re-aligned BAM file from a BAM file.
+string bdsSort(string SAMPLE, string SORT_BAM_DIR){
+
+	#Generate file names from input string.
+	SortIn := "$SORT_BAM_DIR/$SAMPLE" + "_realigned.bam"
+	SortOut := "$SORT_BAM_DIR/$SAMPLE" + "_realigned_sorted.bam"
+
+	#Run the task.
+	return dep (SortOut <- SortIn, taskName:="bdsSort") {
+		sys ~/share/usr/samtools/1.3.1/bin/samtools sort -o $SortOut $SortIn
+	}
+}          
+

@@ -1,4 +1,31 @@
-# OS generated files #
-######################
+## OS Generated Files ##
+########################
 .DS_Store
 .DS_Store?
+*.swp
+*.bam
+*.bam.bai
+*.fa.*
+*.fa
+SampleSingleLines.txt
+ref/
+ref
+bam/
+fastq/
+vcf/
+mpileup/
+OLD/
+log/
+muTect/
+
+
+
+## Nextflow Generated Files ##
+.nextflow
+.nextflow.log*
+work/
+
+## Snakemake Generated Files ##
+.snakemake/
+__pycache__/
+snakejob*

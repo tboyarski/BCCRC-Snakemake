@@ -1,0 +1,219 @@
+<html lang="en">
+<head>
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+	<style type="text/css">
+		pre {
+			width:1200px;
+			overflow: auto;
+			word-wrap: normal;
+			white-space: pre;
+		}
+	</style>    
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+	<script src="http://cytoscape.github.io/cytoscape.js/api/cytoscape.js-latest/cytoscape.min.js"></script>
+	<script src="bdsPipeline1.bds.20170210_155111_540.dag.js"></script>
+</head>
+<body>
+
+<div class="container" id="summary">
+	<h2 class="bs-featurette-title"> BigDataScript report: bdsPipeline1.bds </h2>
+	
+	<table class="table table-striped">
+		<tr> <th> Script file </th><td> bdsPipeline1.bds </td></tr>
+		<tr> <th> Program ID </th><td> bdsPipeline1.bds.20170210_155111_540 </td></tr>
+		<tr> <th> Start time </th><td> 2017-02-10 15:51:11 </td></tr>
+		<tr> <th> Run time </th><td> 03:32:42.026 </td></tr>
+		<tr> <th> Tasks executed </th><td> 3 </td></tr>
+		<tr> <th> Tasks failed </th><td> 0 </td></tr>
+		<tr> <th> Tasks failed names </th><td> <pre></pre> </td></tr>
+		<tr> <th> Arguments* </th><td> [] </td></tr>
+		<tr> <th> System* </th><td> sge </td></tr>
+		<tr> <th> Cpus* </th><td> 1 </td></tr>
+		<tr> <th> Exit value </th><td  > 0 </td></tr>
+	</table>
+	<b>*</b> Values in global scope when program finished execution.
+</div>
+
+<div class="container" id="bdsTimeLine">
+	<h2 class="bs-featurette-title"> Timeline </h2>
+	<script type="text/javascript" src="https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization','version':'1','packages':['timeline']}]}"></script>
+	<script type="text/javascript">
+	google.setOnLoadCallback(drawChart);
+	
+	function drawChart() {
+	  var container = document.getElementById('bdsTimeline');
+	
+	  var chart = new google.visualization.Timeline(container);
+	
+	  var dataTable = new google.visualization.DataTable();
+	
+	  dataTable.addColumn({ type: 'string', id: 'TaskName' });
+	  dataTable.addColumn({ type: 'string', id: 'TaskHint' });
+	  dataTable.addColumn({ type: 'date', id: 'Start' });
+	  dataTable.addColumn({ type: 'date', id: 'End' });
+	
+	  dataTable.addRows([
+	    [ 'bdsAlign', '~/share/usr/bwa-0.7.5a/bwa mem ref/GRCh37-lite.fa fastq/Pfeiffer.1.fastq fastq/Pfeiffer.2.fastq | samtools view -bhS - > bam/Pfeiffer_realigned.bam', new Date(2017,1,10,15,51,13), new Date(2017,1,10,17,27,57) ],
+	    [ 'bdsSort', '~/share/usr/samtools/1.3.1/bin/samtools sort -o bam/Pfeiffer_realigned_sorted.bam bam/Pfeiffer_realigned.bam', new Date(2017,1,10,17,27,58), new Date(2017,1,10,18,35,56) ],
+	    [ 'bdsIndex', '~/share/usr/samtools/1.3.1/bin/samtools index bam/Pfeiffer_realigned_sorted.bam bam/Pfeiffer_realigned_sorted.bam.bai', new Date(2017,1,10,18,35,56), new Date(2017,1,10,19,23,53) ],
+	    ]);
+	
+	  var options = {
+	    timeline: { groupByRowLabel: false }
+	  };
+	  
+	  chart.draw(dataTable, options);
+	}
+	</script>
+	<div id="bdsTimeline" style="width: 900px; height: 210px;"></div>
+</div>
+
+<div class="container" id="taskDag">
+	<h2 class="bs-featurette-title"> Task Graph </h2>
+	<div class="container" id="cy" style="height: 100%; width: 100%; border: solid 1px black""></div>
+</div>
+
+<div class="container" id="threadDetails">
+	<h2 class="bs-featurette-title"> Parallel (threads) details </h2>
+	<table class="table table-striped">
+    <tr> <th> Thread ID    </th> <th> Parent           </th>	<th> Tasks </th> </tr>
+	<tr> <td> thread_Root </td> <td> None </td>	<td> <pre> bdsPipeline1.bds.20170210_155111_540/task.bdsAlign.bdsAlign.line_14.id_1
+bdsPipeline1.bds.20170210_155111_540/task.bdsSort.bdsSort.line_12.id_2
+bdsPipeline1.bds.20170210_155111_540/task.bdsIndex.bdsIndex.line_12.id_3
+ </pre> </td> </tr>
+	</table>
+</div>
+
+<div class="container" id="taskDetails">
+	<h2 class="bs-featurette-title"> Task details </h2>
+	<table class="table table-striped">
+    <tr> <th> Task </th>            <th> Execution </th>            <th> Time </th> <th> Dependencies </th>     <th> Task program, Errors, StdOut / StdErr </th> </tr>
+    <tr> <td> <table class="table"> <tr> <th> Num </th> <td> 1 </td> </tr> <tr> <th> ID </th> <td> task.bdsAlign.bdsAlign.line_14.id_1 </td> </tr> <tr> <th> Name </th> <td> bdsAlign </td></tr> <tr> <th> Thread </th> <td> thread_Root </td> </tr> <tr> <th> PID </th> <td> 5002054 </td> </tr> </table> </td> <td > <table class="table"> <tr> <th> OK </th> <td> true </td>  </tr> <tr> <th> Exit Code </th> <td> 0 </td>  </tr> <tr> <th> Retries </th> <td>  </td></tr> <tr> <th> State </th> <td> FINISHED </td> </tr> <tr> <th> Dep. </th> <td> OK </td> </tr> <tr> <th> Cpus </th> <td>  1 </td></tr> <tr> <th> Mem </th> <td> 10.0 GB </td></tr> </table> </td> <td> <table class="table"> <tr> <th> Start </th> <td> 2017-02-10 15:51:13 </td> </tr> <tr> <th> End </th> <td> 2017-02-10 17:27:57 </td> </tr> <tr> <th> Elapsed </th> <td> 01:36:44 </td> </tr> <tr> <th> Timeout</th> <td> 1 day </td></tr> <tr> <th> Wall Timeout </th><td>  1 day </td></tr> </table> </td> <td> <table class="table"> <tr> <th> Input files</th> <td> /extscratch/clc/projects/tboyarski/BDStest/FEB10/fastq/Pfeiffer.1.fastq
+/extscratch/clc/projects/tboyarski/BDStest/FEB10/fastq/Pfeiffer.2.fastq
+ </td>  </tr> <tr> <th> Output files </th> <td> /extscratch/clc/projects/tboyarski/BDStest/FEB10/bam/Pfeiffer_realigned.bam
+ </td> </tr> <tr> <th> Dependencies </th> <td>  </td> </tr> </table> </td> <td> <pre> 
+# SYS command. line 15
+
+ ~/share/usr/bwa-0.7.5a/bwa mem ref/GRCh37-lite.fa fastq/Pfeiffer.1.fastq fastq/Pfeiffer.2.fastq | samtools view -bhS - > bam/Pfeiffer_realigned.bam
+ </pre> <pre>    
+--------------------Stderr--------------------
+[M::mem_pestat] (25, 50, 75) percentile: (323, 345, 369)
+[M::mem_pestat] low and high boundaries for computing mean and std.dev: (231, 461)
+[M::mem_pestat] mean and std.dev: (346.90, 32.72)
+[M::mem_pestat] low and high boundaries for proper pairs: (185, 507)
+[M::mem_pestat] skip orientation RF as there are not enough pairs
+[M::mem_pestat] skip orientation RR as there are not enough pairs
+[M::worker2@0] performed mate-SW for 230633 reads
+[main] Version: 0.7.5a-r405
+[main] CMD: /home/tboyarski/share/usr/bwa-0.7.5a/bwa mem ref/GRCh37-lite.fa fastq/Pfeiffer.1.fastq fastq/Pfeiffer.2.fastq
+[main] Real time: 94.408 sec; CPU: 60.179 sec
+
+ </pre> </td> </tr>
+    <tr> <td> <table class="table"> <tr> <th> Num </th> <td> 2 </td> </tr> <tr> <th> ID </th> <td> task.bdsSort.bdsSort.line_12.id_2 </td> </tr> <tr> <th> Name </th> <td> bdsSort </td></tr> <tr> <th> Thread </th> <td> thread_Root </td> </tr> <tr> <th> PID </th> <td> 5013729 </td> </tr> </table> </td> <td > <table class="table"> <tr> <th> OK </th> <td> true </td>  </tr> <tr> <th> Exit Code </th> <td> 0 </td>  </tr> <tr> <th> Retries </th> <td>  </td></tr> <tr> <th> State </th> <td> FINISHED </td> </tr> <tr> <th> Dep. </th> <td> OK </td> </tr> <tr> <th> Cpus </th> <td>  1 </td></tr> <tr> <th> Mem </th> <td> 10.0 GB </td></tr> </table> </td> <td> <table class="table"> <tr> <th> Start </th> <td> 2017-02-10 17:27:58 </td> </tr> <tr> <th> End </th> <td> 2017-02-10 18:35:56 </td> </tr> <tr> <th> Elapsed </th> <td> 01:07:57 </td> </tr> <tr> <th> Timeout</th> <td> 1 day </td></tr> <tr> <th> Wall Timeout </th><td>  1 day </td></tr> </table> </td> <td> <table class="table"> <tr> <th> Input files</th> <td> /extscratch/clc/projects/tboyarski/BDStest/FEB10/bam/Pfeiffer_realigned.bam
+ </td>  </tr> <tr> <th> Output files </th> <td> /extscratch/clc/projects/tboyarski/BDStest/FEB10/bam/Pfeiffer_realigned_sorted.bam
+ </td> </tr> <tr> <th> Dependencies </th> <td>  </td> </tr> </table> </td> <td> <pre> 
+# SYS command. line 13
+
+ ~/share/usr/samtools/1.3.1/bin/samtools sort -o bam/Pfeiffer_realigned_sorted.bam bam/Pfeiffer_realigned.bam
+ </pre> <pre>     </pre> </td> </tr>
+    <tr> <td> <table class="table"> <tr> <th> Num </th> <td> 3 </td> </tr> <tr> <th> ID </th> <td> task.bdsIndex.bdsIndex.line_12.id_3 </td> </tr> <tr> <th> Name </th> <td> bdsIndex </td></tr> <tr> <th> Thread </th> <td> thread_Root </td> </tr> <tr> <th> PID </th> <td> 5026048 </td> </tr> </table> </td> <td > <table class="table"> <tr> <th> OK </th> <td> true </td>  </tr> <tr> <th> Exit Code </th> <td> 0 </td>  </tr> <tr> <th> Retries </th> <td>  </td></tr> <tr> <th> State </th> <td> FINISHED </td> </tr> <tr> <th> Dep. </th> <td> OK </td> </tr> <tr> <th> Cpus </th> <td>  1 </td></tr> <tr> <th> Mem </th> <td> 10.0 GB </td></tr> </table> </td> <td> <table class="table"> <tr> <th> Start </th> <td> 2017-02-10 18:35:56 </td> </tr> <tr> <th> End </th> <td> 2017-02-10 19:23:53 </td> </tr> <tr> <th> Elapsed </th> <td> 00:47:56 </td> </tr> <tr> <th> Timeout</th> <td> 1 day </td></tr> <tr> <th> Wall Timeout </th><td>  1 day </td></tr> </table> </td> <td> <table class="table"> <tr> <th> Input files</th> <td> /extscratch/clc/projects/tboyarski/BDStest/FEB10/bam/Pfeiffer_realigned_sorted.bam
+ </td>  </tr> <tr> <th> Output files </th> <td> /extscratch/clc/projects/tboyarski/BDStest/FEB10/bam/Pfeiffer_realigned_sorted.bam.bai
+ </td> </tr> <tr> <th> Dependencies </th> <td>  </td> </tr> </table> </td> <td> <pre> 
+# SYS command. line 13
+
+ ~/share/usr/samtools/1.3.1/bin/samtools index bam/Pfeiffer_realigned_sorted.bam bam/Pfeiffer_realigned_sorted.bam.bai
+ </pre> <pre>     </pre> </td> </tr>
+	</table>
+</div>
+
+<div class="container" id="scope">
+	<h2 class="bs-featurette-title"> Global scope </h2>
+	<b>Note:</b> Global scope when program finished execution.
+	<table class="table table-striped">
+	<tr> <th> Type </th><th> Name </th><th> Value </th> </tr>
+	<tr> <td> string </td><td> _ </td><td> /home/tboyarski/share/usr/BigDataScript/0.99999g/bds </td> </tr>
+	<tr> <td> string </td><td> _LMFILES_ </td><td> /opt/Modules/modulefiles/sge/6.2u5:/opt/Modules/modulefiles/mpi/openmpi/gcc/1.4.1-2ofed </td> </tr>
+	<tr> <td> string </td><td> _LMFILES__modshare </td><td> /opt/Modules/modulefiles/mpi/openmpi/gcc/1.4.1-2ofed:2:/opt/Modules/modulefiles/sge/6.2u5:2 </td> </tr>
+	<tr> <td> bool </td><td> allowEmpty </td><td> false </td> </tr>
+	<tr> <td> string </td><td> ANT_HOME </td><td> /home/tboyarski/share/usr/ant/1.10.0 </td> </tr>
+	<tr> <td> string </td><td> ARCH </td><td> lx24-amd64 </td> </tr>
+	<tr> <td> string[] </td><td> args </td><td> [] </td> </tr>
+	<tr> <td> bool </td><td> canFail </td><td> false </td> </tr>
+	<tr> <td> string </td><td> CLASSPATH </td><td> /opt/ngs-1.2.3/jar/ngs-java.jar: </td> </tr>
+	<tr> <td> int </td><td> cpus </td><td> 1 </td> </tr>
+	<tr> <td> int </td><td> cpusLocal </td><td> 16 </td> </tr>
+	<tr> <td> int </td><td> day </td><td> 86400 </td> </tr>
+	<tr> <td> real </td><td> E </td><td> 2.718281828459045 </td> </tr>
+	<tr> <td> int </td><td> G </td><td> 1073741824 </td> </tr>
+	<tr> <td> string </td><td> G_BROKEN_FILENAMES </td><td> 1 </td> </tr>
+	<tr> <td> string </td><td> GOPATH </td><td> /home/tboyarski/share/usr/BigDataScript/0.99999g </td> </tr>
+	<tr> <td> string </td><td> GOROOT </td><td> /home/tboyarski/share/usr/go/1.7.5.linux-amd64 </td> </tr>
+	<tr> <td> string </td><td> HISTSIZE </td><td> 1000 </td> </tr>
+	<tr> <td> string </td><td> HOME </td><td> /home/tboyarski </td> </tr>
+	<tr> <td> string </td><td> HOSTNAME </td><td> login1 </td> </tr>
+	<tr> <td> int </td><td> hour </td><td> 3600 </td> </tr>
+	<tr> <td> string </td><td> INPUTRC </td><td> /etc/inputrc </td> </tr>
+	<tr> <td> string </td><td> JAVA </td><td> /home/tboyarski/share/usr/anaconda/2.2.0//bin/ </td> </tr>
+	<tr> <td> string </td><td> JAVA_HOME </td><td> /home/tboyarski/share/usr/anaconda/2.2.0/ </td> </tr>
+	<tr> <td> int </td><td> K </td><td> 1024 </td> </tr>
+	<tr> <td> string </td><td> LANG </td><td> en_US.UTF-8 </td> </tr>
+	<tr> <td> string </td><td> LD_LIBRARY_PATH </td><td> /home/tboyarski/share/usr/anaconda/2.2.0/lib:/opt/sge/lib/lx24-amd64/:/opt/ngs-1.2.3/lib64:/usr/local/ncbi/ncbi-vdb/lib64:/usr/mpi/gcc/openmpi-1.4.1/lib64:/opt/sge/lib/lx24-amd64 </td> </tr>
+	<tr> <td> string </td><td> LD_LIBRARY_PATH_modshare </td><td> /usr/mpi/gcc/openmpi-1.4.1/lib64:1:/opt/sge/lib/lx24-amd64:1 </td> </tr>
+	<tr> <td> string </td><td> LESSOPEN </td><td> |/usr/bin/lesspipe.sh %s </td> </tr>
+	<tr> <td> string </td><td> LOADEDMODULES </td><td> :sge/6.2u5:openmpi/gcc/1.4.1-2ofed </td> </tr>
+	<tr> <td> string </td><td> LOADEDMODULES_modshare </td><td> :999999999:openmpi/gcc/1.4.1-2ofed:2:sge/6.2u5:2 </td> </tr>
+	<tr> <td> string </td><td> LOCAL_INCLUDE </td><td> -L/usr/local/include </td> </tr>
+	<tr> <td> string </td><td> LOCAL_INCLUDE_modshare </td><td> -L/usr/local/include:2 </td> </tr>
+	<tr> <td> string </td><td> LOCAL_LDFLAGS </td><td> -L/usr/mpi/gcc/openmpi-1.4.1/lib64 </td> </tr>
+	<tr> <td> string </td><td> LOCAL_LDFLAGS_modshare </td><td> -L/usr/mpi/gcc/openmpi-1.4.1/lib64:2 </td> </tr>
+	<tr> <td> string </td><td> LOGNAME </td><td> tboyarski </td> </tr>
+	<tr> <td> string </td><td> LS_COLORS </td><td> no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35: </td> </tr>
+	<tr> <td> int </td><td> M </td><td> 1048576 </td> </tr>
+	<tr> <td> string </td><td> MAIL </td><td> /var/spool/mail/tboyarski </td> </tr>
+	<tr> <td> string </td><td> MANPATH </td><td> /opt/sge/man:/opt/sge/man:/usr/mpi/gcc/openmpi-1.4.1/share/man::/opt/Modules/share/man:/opt/sge/man:/opt/Modules/share/man </td> </tr>
+	<tr> <td> string </td><td> MANPATH_modshare </td><td> :1:/usr/mpi/gcc/openmpi-1.4.1/share/man:2:/opt/sge/man:2:/opt/Modules/share/man:1 </td> </tr>
+	<tr> <td> int </td><td> mem </td><td> 10737418240 </td> </tr>
+	<tr> <td> int </td><td> minute </td><td> 60 </td> </tr>
+	<tr> <td> string </td><td> MODULEPATH </td><td> /opt/Modules/modulefiles:/opt/Modules/modulefiles/mpi: </td> </tr>
+	<tr> <td> string </td><td> MODULESHOME </td><td> /opt/Modules </td> </tr>
+	<tr> <td> string </td><td> NGS_LIBDIR </td><td> /opt/ngs-1.2.3/lib64 </td> </tr>
+	<tr> <td> string </td><td> NLSPATH </td><td> /usr/dt/lib/nls/msg/%L/%N.cat </td> </tr>
+	<tr> <td> string </td><td> node </td><td>  </td> </tr>
+	<tr> <td> string </td><td> OLDPWD </td><td> /home/tboyarski/share/projects/tboyarski/BDStest/FEB10/bam </td> </tr>
+	<tr> <td> int </td><td> P </td><td> 1125899906842624 </td> </tr>
+	<tr> <td> string </td><td> PATH </td><td> /home/tboyarski/share/usr/ant/1.10.0/bin:/home/tboyarski/share/usr/go/1.7.5.linux-amd64/bin:/home/tboyarski/share/usr/JDK/1.8.0_112/bin:/home/tboyarski/share/usr/anaconda/2.2.0/bin:/home/tboyarski/share/usr/bin:/home/tboyarski/share/usr/ant/1.10.0/bin:/home/tboyarski/share/usr/go/1.7.5.linux-amd64/bin:/home/tboyarski/share/usr/JDK/1.8.0_112/bin:/home/tboyarski/share/usr/anaconda/2.2.0/bin:/home/tboyarski/share/usr/bin:/opt/sratoolkit-2.5.7/bin:/usr/mpi/gcc/openmpi-1.4.1/bin:/usr/kerberos/bin:/usr/local/bin:/bin:/usr/bin:/usr/lpp/mmfs/bin:/opt/sge/bin/lx24-amd64:/opt/sge/bin/lx24-amd64/:/home/tboyarski/share/usr/BigDataScript/0.99999g:/usr/lpp/mmfs/bin:/opt/sge/bin/lx24-amd64/:/home/tboyarski/share/usr/BigDataScript/0.99999g </td> </tr>
+	<tr> <td> string </td><td> PATH_modshare </td><td> /usr/mpi/gcc/openmpi-1.4.1/bin:2:/usr/bin:1:/opt/sge/bin/lx24-amd64/:999999999:/home/tboyarski/share/usr/ant/1.10.0/bin:999999999:/opt/sge/bin/lx24-amd64:2:/usr/local/bin:1:/home/tboyarski/share/usr/BigDataScript/0.99999g:999999999:/bin:1:/home/tboyarski/share/usr/JDK/1.8.0_112/bin:999999999:/home/tboyarski/share/usr/bin:999999999:/opt/sratoolkit-2.5.7/bin:999999999:/usr/kerberos/bin:1:/home/tboyarski/share/usr/anaconda/2.2.0/bin:999999999:/usr/lpp/mmfs/bin:1:/home/tboyarski/share/usr/go/1.7.5.linux-amd64/bin:999999999 </td> </tr>
+	<tr> <td> real </td><td> PI </td><td> 3.141592653589793 </td> </tr>
+	<tr> <td> string </td><td> ppwd </td><td> /extscratch/clc/projects/tboyarski/BDStest/FEB10 </td> </tr>
+	<tr> <td> string </td><td> programName </td><td> bdsPipeline1.bds </td> </tr>
+	<tr> <td> string </td><td> programPath </td><td> bdsPipeline1.bds </td> </tr>
+	<tr> <td> string </td><td> PS1 </td><td> [\\u@\\h \\W]\\$  </td> </tr>
+	<tr> <td> string </td><td> PWD </td><td> /home/tboyarski/share/projects/tboyarski/BDStest/FEB10 </td> </tr>
+	<tr> <td> string </td><td> queue </td><td> Tim-BDSTest </td> </tr>
+	<tr> <td> int </td><td> retry </td><td> 0 </td> </tr>
+	<tr> <td> string </td><td> SGE_CELL </td><td> genesis </td> </tr>
+	<tr> <td> string </td><td> SGE_EXECD_PORT </td><td> 6445 </td> </tr>
+	<tr> <td> string </td><td> SGE_QMASTER_PORT </td><td> 6444 </td> </tr>
+	<tr> <td> string </td><td> SGE_ROOT </td><td> /opt/sge </td> </tr>
+	<tr> <td> string </td><td> SHELL </td><td> /bin/bash </td> </tr>
+	<tr> <td> string </td><td> SHLVL </td><td> 2 </td> </tr>
+	<tr> <td> string </td><td> SSH_ASKPASS </td><td> /usr/libexec/openssh/gnome-ssh-askpass </td> </tr>
+	<tr> <td> string </td><td> SSH_CLIENT </td><td> 172.20.106.83 42292 22 </td> </tr>
+	<tr> <td> string </td><td> SSH_CONNECTION </td><td> 172.20.106.83 42292 172.20.106.41 22 </td> </tr>
+	<tr> <td> string </td><td> SSH_TTY </td><td> /dev/pts/21 </td> </tr>
+	<tr> <td> string </td><td> STY </td><td> 4381.bdsPipeline1 </td> </tr>
+	<tr> <td> string </td><td> system </td><td> sge </td> </tr>
+	<tr> <td> int </td><td> T </td><td> 1099511627776 </td> </tr>
+	<tr> <td> string </td><td> TERM </td><td> screen </td> </tr>
+	<tr> <td> string </td><td> TERMCAP </td><td> SC|screen|VT 100/ANSI X3.64 virtual terminal:\\\n\t:DO=\\E[%dB:LE=\\E[%dD:RI=\\E[%dC:UP=\\E[%dA:bs:bt=\\E[Z:\\\n\t:cd=\\E[J:ce=\\E[K:cl=\\E[H\\E[J:cm=\\E[%i%d;%dH:ct=\\E[3g:\\\n\t:do=^J:nd=\\E[C:pt:rc=\\E8:rs=\\Ec:sc=\\E7:st=\\EH:up=\\EM:\\\n\t:le=^H:bl=^G:cr=^M:it#8:ho=\\E[H:nw=\\EE:ta=^I:is=\\E)0:\\\n\t:li#83:co#196:am:xn:xv:LP:sr=\\EM:al=\\E[L:AL=\\E[%dL:\\\n\t:cs=\\E[%i%d;%dr:dl=\\E[M:DL=\\E[%dM:dc=\\E[P:DC=\\E[%dP:\\\n\t:im=\\E[4h:ei=\\E[4l:mi:IC=\\E[%d@:ks=\\E[?1h\\E=:\\\n\t:ke=\\E[?1l\\E>:vi=\\E[?25l:ve=\\E[34h\\E[?25h:vs=\\E[34l:\\\n\t:ti=\\E[?1049h:te=\\E[?1049l:us=\\E[4m:ue=\\E[24m:so=\\E[3m:\\\n\t:se=\\E[23m:mb=\\E[5m:md=\\E[1m:mr=\\E[7m:me=\\E[m:ms:\\\n\t:Co#8:pa#64:AF=\\E[3%dm:AB=\\E[4%dm:op=\\E[39;49m:AX:\\\n\t:vb=\\Eg:G0:as=\\E(0:ae=\\E(B:\\\n\t:ac=\\140\\140aaffggjjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~..--++,,hhII00:\\\n\t:po=\\E[5i:pf=\\E[4i:k0=\\E[10~:k1=\\EOP:k2=\\EOQ:k3=\\EOR:\\\n\t:k4=\\EOS:k5=\\E[15~:k6=\\E[17~:k7=\\E[18~:k8=\\E[19~:\\\n\t:k9=\\E[20~:k;=\\E[21~:F1=\\E[23~:F2=\\E[24~:F3=\\EO2P:\\\n\t:F4=\\EO2Q:F5=\\EO2R:F6=\\EO2S:F7=\\E[15;2~:F8=\\E[17;2~:\\\n\t:F9=\\E[18;2~:FA=\\E[19;2~:kb=:K2=\\EOE:kB=\\E[Z:\\\n\t:kF=\\E[1;2B:kR=\\E[1;2A:*4=\\E[3;2~:*7=\\E[1;2F:#2=\\E[1;2H:\\\n\t:#3=\\E[2;2~:#4=\\E[1;2D:%c=\\E[6;2~:%e=\\E[5;2~:%i=\\E[1;2C:\\\n\t:kh=\\E[1~:@1=\\E[1~:kH=\\E[4~:@7=\\E[4~:kN=\\E[6~:kP=\\E[5~:\\\n\t:kI=\\E[2~:kD=\\E[3~:ku=\\EOA:kd=\\EOB:kr=\\EOC:kl=\\EOD:km: </td> </tr>
+	<tr> <td> int </td><td> timeout </td><td> 86400 </td> </tr>
+	<tr> <td> string </td><td> USER </td><td> tboyarski </td> </tr>
+	<tr> <td> int </td><td> walltimeout </td><td> 86400 </td> </tr>
+	<tr> <td> int </td><td> week </td><td> 604800 </td> </tr>
+	<tr> <td> string </td><td> WINDOW </td><td> 0 </td> </tr>
+	<tr> <td> string </td><td> XFILESEARCHPATH </td><td> /usr/dt/app-defaults/%L/Dt </td> </tr>
+	</table>
+</div>
+
+</body>
+

@@ -1,0 +1,25 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:	    2017-03-06                                      
+#-----------------------------------------------------------
+# Input:                                    .BAM            
+# Output:                                   1.fastq 2.fastq 
+# Purpose: Generate the original fastq paired-end reads     
+#   from a BAM file, via Picard.                            
+#-----------------------------------------------------------
+from time import localtime, strftime
+from subprocess import call
+
+rule undoBAM:
+    input: 
+        expand("{inputDIR}/{rawBamDIR}/{{samples}}.bam", inputDIR=config["inputDIR"], rawBamDIR=config["rawBamDIR"])
+    output:
+        expand("{outputDIR}/{fastqDIR}/{{samples}}.{readDirection}.fastq", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], readDirection=["1", "2"])
+    params:
+        logNAME="undoBAM." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["reBamDIR"]
+    run:
+        call(config["undoBAM_picardProg"] + ' SamToFastq I=' + str(input) + ' FASTQ=' + str(output[0]) + ' SECOND_END_FASTQ=' + str(output[1]) \
+        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr', shell=True)
+#-------------------------------------------------------------------------------------------------------

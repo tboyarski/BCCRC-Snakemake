@@ -1,0 +1,38 @@
+#-------------------------------------------------------------------
+# Author:   Tim Boyarski                                            
+# Date:     2017-02-28                                              
+#-------------------------------------------------------------------
+# Rule specific configurations set in:      ReBamPlus.json          
+# Rule specific parameters set in:          ReBamPlus.yaml          
+# Input:                                    .BAM                    
+# Output:                                   1.fastq                 
+#                                           2.fastq                 
+#                                           realigned.BAM           
+#                                           realigned_sorted.BAM,   
+#                                           realigned_sorted.BAM.BAI
+# Purpose: Master Workflow calling fileParse and ReBamPlus.         
+#-------------------------------------------------------------------
+
+configfile: "ReBamPlus.yaml"
+
+fileName = "fileParse/SampleSingleLines.txt"
+
+
+
+def sampleListLines(fileName):
+    # Delcaration of list to hold the values
+    sampleList = []
+    fileDIR = "bam/"
+    # Open file, read lines, split lines, stored key-value pair.
+    with open(fileName, 'r') as f:
+        for s in f.readlines():
+            sampleList.append(fileDIR + s.strip())
+    f.close()
+    return sampleList
+
+
+include: "ReBamPlus/Snakefile"
+
+rule pipeline:
+    input: sampleListLines(fileName)
+    output: "bam/Pfeiffer2_realigned_sorted.bam.bai"

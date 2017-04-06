@@ -1,0 +1,80 @@
+#---------------------
+# Author: tboyarski
+# Date: 2017-04-01.01-37-29
+#---------------------
+# Call using: snakemake --jobs 10 --cluster-config input/config.json --drmaa "{cluster.clusterSpec}"
+# Global config:
+configfile: "input/config.yaml"
+
+# Global rule to pull all output files:
+rule all:
+    input:
+        expand("{outputDIR}/{vcfDIR}/{samples}.varScan.snps.vcf", outputDIR=config["outputDIR"], vcfDIR=config["vcfDIR"], samples=config["sample"])
+
+
+
+#**** reBam ****:
+#  Included:
+#    undoBAM:    Fastq generation from a BAM file
+#    alignBAM:   BAM generation from a Fastq file
+#    sortBAM:    Sorting of the BAM file
+#    indexBAM:   Indexing of a BAM file
+#    filteredBAM:Filtering of a BAM file on read quality
+#    rmdupBAM:   Remove dupliates in a BAM file
+#  Files:
+#    input:      X.BAM
+#    output:     X_realigned_sorted.BAM.
+#                X_realigned_sorted.BAM.BAI
+include: "/home/tboyarski/share/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake/modules/reBam/reBam_INCLUDE"
+#  Required: NONE
+#  Call via:
+#  expand("{outputDIR}/{fastqDIR}/{samples}.{version}.fastq", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], samples=config["sample"], version=["1", "2"])                 #undoBAM
+#  expand("{outputDIR}/{reBamDIR}/{samples}_realigned.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"])                                       #alignBAM
+#  expand("{outputDIR}/{reBamDIR}/{samples}_sorted.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"])                                          #sortBAM
+#  expand("{outputDIR}/{reBamDIR}/{samples}.bam.bai", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"])                                             #indexBAM
+#  expand("{outputDIR}/{reBamDIR}/{samples}{fileTAG}.bam.bai", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"], fileTAG=config["fileTAG"])         #indexBAM
+#  expand("{outputDIR}/{reBamDIR}/{samples}_realigned_sorted.bam.bai", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"], fileTAG=config["fileTAG"]) #indexBAM
+#  expand("{outputDIR}/{reBamDIR}/{samples}_filtered.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"])                                        #filteredBAM
+#  expand("{outputDIR}/{reBamDIR}/{samples}_rmdup.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"])                                           #rmdupBAM
+
+
+#***** mPile *****
+#  Included:
+#    mPileUNSPLIT:     Generated mpileup file from BAM file.
+#    mPileSPLIT:     Generated mpileup file from BAM file.
+#  Files:
+#    Input:      .BAM
+#    Output:     .mpileup
+include: "/home/tboyarski/share/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake/modules/mPile/mPile_INCLUDE"
+#  Required: NONE
+#  Call via: 
+#    expand("{outputDIR}/{mpileDIR}/{samples}.mpileup", outputDIR=config["outputDIR"], mpileDIR=config["mpileDIR"], samples=config["sample"])
+
+
+#***** varScan *****
+#  Included:
+#    mpileup2snp:    Generate VCF output of SNPs from a mPileUp file.
+#    mpileup2indel:    Generate VCF output of INDELs from a mPileUp file.
+#    somatic:    Coming soon!.
+#  Files:
+#    input:      X.mpileup
+#    output:     X.varScan.snps.vcf
+include: "/home/tboyarski/share/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake/modules/varScan/varScan_INCLUDE"
+#  Required:
+#    >mPile:      Generate a MPileUp file from a BAM file.
+#    @include: "/home/tboyarski/share/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake/modules/mPile/mPile_INCLUDE"
+#  Call via:
+# expand("{outputDIR}/{vcfDIR}/{samples}.varScan.snps.vcf", outputDIR=config["outputDIR"], vcfDIR=config["vcfDIR"], samples=config["sample"])
+# expand("{outputDIR}/{vcfDIR}/{samples}.varScan.indels.vcf", outputDIR=config["outputDIR"], vcfDIR=config["vcfDIR"], samples=config["sample"])
+
+
+#***** muTect *****
+#  Included:
+#    muTect:     Generated mpileup file from BAM file.
+#  Files:
+#    input:      X.BAM
+#    output:     X.VCF
+include: "/home/tboyarski/share/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake/modules/muTect/muTect_INCLUDE"
+#  Required: NONE
+#  Call via: 
+#    expand("{outputDIR}/{muTectDIR}/{samples}{fileTAG}.mpileup", outputDIR=config["outputDIR"], samples=config["sample"], muTectDIR=config["muTectDIR"], fileTAG=config["fileTAG"])

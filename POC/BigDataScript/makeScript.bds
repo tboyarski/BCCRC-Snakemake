@@ -1,0 +1,28 @@
+help ***START*******************************************************************************************
+help Author:    Tim Boyarski
+help Date:	    2017-02-20
+help ***************************************************************************************************
+help makeScript.bds assist in using a module's 'opCode'-call to build a user pipeline. Users must
+help        manually edit this script.
+help ***************************************************************************************************
+
+# Pick a name for your BDS Pipeline "bdsTemplate.bds"
+BDS_TEMPLATE_NAME := "Tim2.bds"
+# Pick the name of the sample "Pfeiffer"
+SAMPLE_NAME := "Pfeiffer"
+# Setting variables to hold filename and goal array. 
+SAMPLE_DECLARATION := "SAMPLE := \"$SAMPLE_NAME\"\n"
+GOAL_LIST_DECLARATION := "string[] tid\n\n"
+
+# Combining all string for insertion into header.
+SCRIPT_HEADER := SAMPLE_DECLARATION + GOAL_LIST_DECLARATION
+# Create or replace file by this name; insert formatted header.
+BDS_TEMPLATE_NAME.write(SCRIPT_HEADER)
+
+#Automated script to generate BDS Pipeline.
+moduleList := ["Sort", "Fastq", "Index", "Align"]
+for(string EACH : moduleList){
+    sys bds bds$EACH.bds -opCode$EACH >> $BDS_TEMPLATE_NAME
+}
+
+sys echo "goal tid" >> $BDS_TEMPLATE_NAME

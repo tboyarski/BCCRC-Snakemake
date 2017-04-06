@@ -1,0 +1,23 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-03-06                                      
+#-----------------------------------------------------------
+# Call: call("python " + ROOT_PATH + "/modules/varScan/varScan.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .mpileup        
+# Output:                                   .snps.vcf       
+# Purpose: Generate VCF output from a MPileup file. Able to 
+#   perform analysis on a per-chromosome basis if requested.
+#-----------------------------------------------------------
+from time import gmtime, strftime
+from subprocess import call
+
+rule somatic:
+    input:
+    output:
+    params:
+        baseArgs = config["minCOV"]+" "+config["minREAD"]+" "+config["minQUAL"]+" "+config["minFREQ"]+" "+config["pVALUE"]+" "+config["strandFILT"]+" "+config["outVCF"],
+        logNAME="varScan." + strftime("%Y-%m-%d.%H-%M-%S", gmtime())
+    log:
+        "log/" + config["varScanDIR"]
+    run:
+#-------------------------------------------------------------------------------------------------------

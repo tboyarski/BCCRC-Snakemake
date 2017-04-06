@@ -1,0 +1,15 @@
+name: CB351M11-PassMin
+channels:
+- nlesc
+- bioconda
+- defaults
+dependencies:
+- bwa=0.7.13=0
+- java-jdk=8.0.92=0
+- picard=2.7.1=py35_1
+- samtools=0.1.18=0
+- snakemake=3.10.1=py35_1
+- varscan=2.4.0=0
+- drmaa=0.7.6=py35_0
+- python=3.5.1=5
+prefix: /home/tboyarski/share/usr/anaconda/4.3.0/envs/CB351M11-PassMin

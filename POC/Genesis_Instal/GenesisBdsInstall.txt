@@ -1,0 +1,56 @@
+Author: tboyarski
+Date: 2017-01-31
+
+1) This should all be downloaded and installed in a specific location:	~share/usr/
+	Name the folder specific to the softare being installed
+		mkdir -p ~/share/usr/JDK/1.8.0_121/
+		mkdir -p ~/share/usr/JDK/			-Tar.gz stored here
+		mkdir -p ~/share/usr/go/1.7.5.linux-amd64/
+		mkdir -p ~/share/usr/go/			-Tar.gz stored here
+		mkdir -p ~/share/usr/ant/1.10.0
+		mkdir -p ~share/usr/ant/			-Bin File stored here
+		mkdir -p ~/share/usr/BigDataScript/bds_linux/
+		mkdir -p ~/share/usr/BigDataScript/		-Tar.gz stored here
+
+2) Download JDK, GO Compiler, and BDS into their respective folders.
+	JDK -- 
+	wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u121-b13/e9e7ea248e2c4826b92b3f075a80e441/jdk-8u121-linux-x64.tar.gz
+
+	GO Compiler -- 
+	wget https://storage.googleapis.com/golang/go1.7.5.linux-amd64.tar.gz
+
+	BDS -- **Update 2017-01-31** We are getting the GitHub version now.
+	wget https://github.com/pcingola/BigDataScript/blob/master/distro/bds_Linux.tgz?raw=true
+
+	ANT -- Required to build BDS Git Download
+	wget http://httpd-mirror.frgl.pw/apache//ant/source/apache-ant-1.10.0-src.tar.gz
+
+3) Unpack and install using tar:
+	a) JDK
+		tar -C ~share/usr/JDK/1.8.0_121/ -zxvf jdk-8u121-linux-x64.tar.gz
+	b) GO Compiler
+		tar -C ~/share/usr/GO/go1.7.5.linux-amd64/ -xzf go1.7.5.linux-amd64.tar.tar.gz
+	c) ANT -- Required to build BDS from a ZIP
+		tar xvf apache-ant-1.10.0-src.tar.gz
+		sh build.sh -Ddist.dir=~/share/usr/ant/1.10.0
+	d) BDS -- Requires Java 1.8+ and GO Compiler
+		tar -C ~share/usr/BigDataScript/bds_linux/ -xvzf ***Add the file name in here****
+
+
+
+
+4) Modify path variables
+	Add to .bashrc and .bash_profile the following:
+		-- You may only need to add to one...
+
+	export PATH=$PATH:$HOME/share/usr/BigDataScript/bds_linux/.bds
+	export PATH=$HOME/share/usr/JDK/jdk1.8.0_121/bin:$PATH
+	export GOROOT=$HOME/share/usr/GO/go1.7.5.linux-amd64
+	export PATH=$PATH:$GOROOT/bin
+	export GOPATH=$HOME/share/usr/bds_linux/
+	export ANT_HOME=$HOME/share/usr/ant/1.10.0
+	export PATH=$ANT_HOME/bin:$PATH
+	export PATH=$PATH:$HOME/.bds/
+
+
+

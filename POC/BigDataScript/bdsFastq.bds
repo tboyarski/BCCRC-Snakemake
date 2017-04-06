@@ -1,0 +1,52 @@
+help ***START*******************************************************************************************
+help Author:    Tim Boyarski
+help Date:      2017-02-14
+help ***************************************************************************************************
+help bdsFastq.bds will take a BAM file, and generate two Fastq files, a front- and dual-end read. 
+help ***************************************************************************************************
+help Call using the following command: bdsFastq(SAMPLE, FASTQ_BAM_DIR, FASTQ_FASTQ_DIR)
+help    SAMPLE = "SampleName"          --- Code name of the file set (E.g. If started with Pfeiffer.bam,
+help                                            set this to 'Pfeiffer')
+help    FASTQ_BAM_DIR = "bam"          --- Relative path//directory from .bds to .bam; read location
+help                                            (E.g. If want from './bam/', set this to 'bam')
+help    FASTQ_FASTQ_DIR = "fastq"      --- Relative path//directory from .bds to .fastq; write location
+help                                            (E.g. If want into './fastq/', set this to 'fastq')
+help ***************************************************************************************************
+help Using the previous directories, these files will be generated
+help        FastqIn = Provided BAM File : "$FASTQ_BAM_DIR/$SAMPLE"
+help        FastqOut1 = Front-End Fastq File : "$FASTQ_FASTQ_DIR/$SAMPLE.1.fastq"
+help        FastqOut2 = Dual-Ends Fastq File : "$FASTQ_FASTQ_DIR/$SAMPLE.2.fastq"
+help ***CODE********************************************************************************************
+help Sample call; Copy and paste this into your script:
+help include "bdsFastq.bds"
+help FASTQ_BAM_DIR := "bam"
+help FASTQ_FASTQ_DIR := "fastq"
+help bdsFastq(SAMPLE, FASTQ_BAM_DIR, FASTQ_FASTQ_DIR)
+help ********OTHER************
+help Set opCode flag to pipe code, use: bds bdsSort.bds -opCodeFastq >> bdsYours.bds
+opCodeFastq := false     help Set true to generate code to call bds script ~ script building
+help ***END*********************************************************************************************
+
+if(opCodeFastq){
+    print("include \"bdsFastq.bds\"\n")
+    print("FASTQ_BAM_DIR := \"bam\"\n")
+    print("FASTQ_FASTQ_DIR := \"fastq\"\n")
+    print("tid += bdsFastq(SAMPLE, FASTQ_BAM_DIR, FASTQ_FASTQ_DIR)\n")
+    print("\n\n")
+}
+
+
+# Call to produce FASTQ file(s) from a BAM file.
+string bdsFastq(string SAMPLE, string FASTQ_BAM_DIR, string FASTQ_FASTQ_DIR){
+
+	#Generate file names from input string.
+	FastqIn := "$FASTQ_BAM_DIR/$SAMPLE.bam"
+	FastqOut1 := "$FASTQ_FASTQ_DIR/$SAMPLE.1.fastq"
+	FastqOut2 := "$FASTQ_FASTQ_DIR/$SAMPLE.2.fastq"
+	FastqOut := [FastqOut1, FastqOut2]
+
+	#Run task.
+	return dep (FastqOut <- FastqIn, taskName:="bdsFastq") {
+		sys ~/share/usr/anaconda/2.2.0/bin/java -Xmx2G -jar ~/share/usr/picard-tools/2.8.1/build/libs/picard.jar SamToFastq I=$FastqIn FASTQ=$FastqOut[0] SECOND_END_FASTQ=$FastqOut[1]
+	}
+}

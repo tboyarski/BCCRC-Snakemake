@@ -1,0 +1,21 @@
+#Author:    Tim Boyarski
+#Date:	    2017-02-17
+
+# Set sample file name.
+SAMPLE_FILE := "SamplePairs.txt"        help The filename containing your key-value sample pairs. 
+SAMPLE_FILE2 := "SampleSingle.txt"      help The filename containing your list of samples.
+
+include "bdsFileParsePair.bds"
+include "bdsFileParseSingle.bds"
+
+samplePairHash := bdsFileParsePair(SAMPLE_FILE)
+
+for(string k : samplePairHash.keys() ) {
+    print("Key : $k\tValue : " + samplePairHash{k} + "\n")
+}
+
+sampleArray := bdsFileParseSingle(SAMPLE_FILE2)
+for(string k : sampleArray){
+    print k
+}
+

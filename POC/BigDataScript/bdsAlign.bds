@@ -1,0 +1,53 @@
+help ***START*******************************************************************************************
+help Author:    Tim Boyarski
+help Date:	    2017-02-14
+help ***************************************************************************************************
+help bdsAlign.bds will take two Fastq files, front- and a dual-end reads respectively, and use
+help    these fastq files to generate a "realigned" BAM file.
+help ***************************************************************************************************
+help Call using the following command:  bdsAlign(SAMPLE, ALIGN_BAM_DIR, ALIGN_FASTQ_DIR)
+help    SAMPLE = "SampleName"       --- Code name of the file set (E.g. If started with Pfeiffer.bam,
+help                                            set this to 'Pfeiffer')
+help    ALIGN_BAM_DIR = "bam"       --- Relative path//directory from .bds to .bam; write location 
+help                                            (E.g. If want into './bam/', set this to 'bam')
+help    ALIGN_FASTQ_DIR = "fastq"   --- Relative path//directory from .bds to .fastq; read location
+help                                            (E.g. If want from './fastq/', set this to 'fastq')
+help ***************************************************************************************************
+help Using the previous information, these variables will be setup.
+help        AlignIn1 = Front-End Fastq File : "$ALIGN_FASTQ_DIR/$SAMPLE.1.fastq"
+help        AlignIn2 = Dual-Ends Fastq File : "$ALIGN_FASTQ_DIR/$SAMPLE.2.fastq"
+help        AlignOut = Realigned BAM File : "$ALIGN_BAM_DIR/$SAMPLE" + "_realigned.bam"
+help ***CODE********************************************************************************************
+help Sample call; Copy and paste this into your script:
+help include "bdsAlign.bds"
+help ALIGN_BAM_DIR := "bam"
+help ALIGN_FASTQ_DIR := "fastq"
+help bdsAlign(SAMPLE, ALIGN_BAM_DIR, ALIGN_FASTQ_DIR)
+help ********OTHER************
+help Set opCode flag to pipe code, use: bds bdsAlign.bds -opCodeAlign >> bdsYours.bds
+opCodeAlign := false     help Set true to generate code to call bds script ~ script building
+help ***END*********************************************************************************************
+
+if(opCodeAlign){
+    print("include \"bdsAlign.bds\"\n")
+    print("ALIGN_BAM_DIR := \"bam\"\n")
+    print("ALIGN_FASTQ_DIR := \"fastq\"\n")
+    print("tid += bdsAlign(SAMPLE, ALIGN_BAM_DIR, ALIGN_FASTQ_DIR)\n")
+    print("\n\n")
+}
+
+
+# Call to produce re-aligned BAM file from FastQ
+string bdsAlign(string SAMPLE, string ALIGN_BAM_DIR, string ALIGN_FASTQ_DIR){
+
+	#Generate file names from input string.
+	AlignIn1 := "$ALIGN_FASTQ_DIR/$SAMPLE.1.fastq"
+	AlignIn2 := "$ALIGN_FASTQ_DIR/$SAMPLE.2.fastq"
+	AlignIn := [ AlignIn1, AlignIn2 ]
+	AlignOut := "$ALIGN_BAM_DIR/$SAMPLE" + "_realigned.bam"
+
+	#Run the task.
+	return dep (AlignOut <- AlignIn, taskName:="bdsAlign") {
+	   sys ~/share/usr/bwa-0.7.5a/bwa mem ref/GRCh37-lite.fa $AlignIn[0] $AlignIn[1] | samtools view -bhS - > $AlignOut
+	}
+}

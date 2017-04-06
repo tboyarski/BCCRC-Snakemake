@@ -1,0 +1,28 @@
+#---------------------------------------------------------------
+# Author:   Tim Boyarski                                        
+# Date:	    2017-03-06                                          
+#---------------------------------------------------------------
+# Input:                                            .BAM        
+# Output:                                           _sorted.BAM 
+# Purpose: Produce a metrics file with the marked duplicated and
+#   also marks them in the BAM file.                            
+#---------------------------------------------------------------
+from time import localtime, strftime
+from subprocess import call
+
+rule markdupBAM:
+    input:
+        expand("{outputDIR}/{reBamDIR}/{{samples}}.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"])
+    output:
+        temp(expand("{outputDIR}/{reBamDIR}/{{samples}}_markdup.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"])),
+        expand("{outputDIR}/{metricsDIR}/{{samples}}.dup_metrics", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
+    params:
+        logNAME="sortBAM." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["reBamDIR"]
+    run:
+        call(config["markdupBAM_samtoolsProg"] + ' view -b ' + str(input) \
+        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.samtools.stderr' \
+        + ' | ' + config["markdupBAM_bammarkduplicatesProg"] + ' I=' + str(input) + ' O=' + str(output[0]) + ' M=' + str(output[1]) \ 
+        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.biobammarkdup.stderr', shell=True)
+#-------------------------------------------------------------------------------------------------------

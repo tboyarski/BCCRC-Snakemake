@@ -1,0 +1,31 @@
+#-------------------------------------------------------------------
+# Author:   Tim Boyarski                                            
+# Date:	    2017-03-06                                              
+#-------------------------------------------------------------------
+# Input:                                                .bam        
+# Output:                                               .bam.bai    
+# Purpose: Produce an indexed BAM file.                             
+#-------------------------------------------------------------------
+from time import localtime, strftime
+from subprocess import call
+from os import getcwd
+
+rule indexBAM:
+    input:
+        expand("{outputDIR}/{reBamDIR}/{{samples}}{fileTAG}.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], fileTAG=config["fileTAG"])
+    output:
+        expand("{outputDIR}/{reBamDIR}/{{samples}}{fileTAG}.bam.bai", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], fileTAG=config["fileTAG"]),
+        expand("{outputDIR}/{bamDIR}/{{samples}}.bam.bai", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"]),
+        expand("{outputDIR}/{bamDIR}/{{samples}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
+    params:
+        bamDIR=config["bamDIR"],
+        outputDIR=config["outputDIR"],
+        logNAME="indexBAM." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["reBamDIR"] 
+    run:
+        call(config["indexBAM_samtoolsProg"] + ' index ' + str(input) + ' ' + str(output[0]) \
+        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.samtools.stderr' \
+        + ' && ln -fs ' + getcwd() + '/' + str(output[0]) + ' ' + getcwd() + '/' + str(output[1]) \
+        + ' && ln -fs ' + getcwd() + '/' + str(input) + ' ' + getcwd() + '/' + str(output[2]), shell=True)
+#-------------------------------------------------------------------------------------------------------

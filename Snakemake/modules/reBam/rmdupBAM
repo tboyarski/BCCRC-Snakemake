@@ -1,0 +1,24 @@
+#-------------------------------------------------------------------
+# Author:   Tim Boyarski                                            
+# Date:	    2017-03-07                                              
+#-------------------------------------------------------------------
+# Input:                                            .BAM            
+# Output:                                           _rmdup.BAM      
+# Purpose: Produce a BAM file with duplicate reads removed.         
+#-------------------------------------------------------------------
+from time import localtime, strftime
+from subprocess import call
+
+rule rmdupBAM:
+    input:
+        expand("{outputDIR}/{reBamDIR}/{{samples}}.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"])
+    output:
+        temp(expand("{outputDIR}/{reBamDIR}/{{samples}}_rmdup.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"]))
+    params:
+        logNAME="rmdupBAM." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["reBamDIR"]
+    run:
+        call(config["rmdupBAM_samtoolsProg"] + ' rmdup ' + str(input) + ' ' + str(output) \
+        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr', shell=True)
+#-------------------------------------------------------------------------------------------------------

@@ -1,0 +1,101 @@
+#---------------------
+# Author: tboyarski
+# Date: 2017-04-01.01-37-29
+#---------------------
+
+
+#################################
+# ----- Global Variables ------ #
+#################################
+#       -- Parameters --        #
+fastqKEEP: False
+refFILE: GRCh37-lite.fa
+chrLIST: ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrM', 'chrX', 'chrY']
+#       -- Directory --         #
+inputDIR: input
+refDIR: ref
+outputDIR: output
+bamDIR: bam
+metricsDIR: metrics
+#         -- Sample --          #
+sample: ['Pfeiffer2']
+#################################
+
+
+#################################
+# ----- reBam Parameters ------ #
+#################################
+#       -- Software --          #
+undoBAM_picardProg: picard
+alignBAM_bwaProg: bwa
+alignBAM_samtoolsProg: samtools
+sortBAM_samtoolsProg: samtools
+sortBAM_bamsortProg: bamsort
+indexBAM_samtoolsProg: samtools
+filteredBAM_samtoolsProg: samtools
+rmdupBAM_samtoolsProg: samtools
+markdupBAM_samtoolsProg: samtools
+markdupBAM_bammarkduplicatesProg: bammarkduplicates2
+#    -- Shared Variables --     #
+fastqDIR: fastq
+reBamDIR: reBam
+#     -- undoBAM Specific --    #
+rawBamDIR: rawBam
+#    -- alignBAM Specific --    #
+#    -- sortBAM Specific --     #
+sortProg: samtools
+#    -- indexBAM Specific --    #
+fileTAG: _realigned_filtered_markdup_sorted
+#   -- filteredBAM Specific --  #
+#    -- rmdupBAM Specific --    #
+#################################
+
+
+
+#################################
+# ----- mPile Parameters ------ #
+#################################
+#       -- Software --          #
+mPileSPLIT_samtoolsProg: samtools
+mPileUNSPLIT_samtoolsProg: samtools
+#    -- Shared Variables --     #
+mpileDIR: mPile
+bitFLAG: 512
+countORPHAN: -A
+noBAQ: -B
+maxDEP: -d 10000000
+mapQUAL: -q 20
+#  -- mPileUNSPLIT Specific --  #
+#   -- mpileSPLIT Specific --   #
+#################################
+
+
+
+#################################
+# ---- varScan Parameters ----- #
+#################################
+#       -- Software --          #
+mpileup2snp_varScanProg: varScan
+mpileup2indel_varScanProg: varScan
+somatic_varScanProg: varScan
+#    -- Shared Variables --     #
+vcfDIR: vcf
+varScanDIR: varScan
+varScanChrSplit: True
+minCOV: --min-coverage 20
+minREAD: --min-reads2 10
+minQUAL: --min-avg-qual 20
+minFREQ: --min-var-freq 0.01
+pVALUE: --p-value 0.05
+strandFILT: --strand-filter 0
+outVCF: --output-vcf 1
+#   -- mpileup2snp Specific --  #
+# -- mpileup2indels Specific -- #
+#    -- somatic Specific --     #
+minSTRAND: --min-strands2 0
+posVALID: --validation 1
+#################################
+
+# muTect Parameters:
+muTectDIR: muTect
+muTect: ~/share/usr/muTect/0.2.2/mutect.jar

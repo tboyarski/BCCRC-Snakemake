@@ -1,0 +1,27 @@
+#-------------------------------------------------------------------
+# Author:   Tim Boyarski                                            
+# Date:     2017-02-28                                              
+#-------------------------------------------------------------------
+# Rule specific configurations set in:      ReBamPlus.json          
+# Rule specific parameters set in:          ReBamPlus.yaml          
+# Input:                                    .BAM                    
+# Output:                                   1.fastq                 
+#                                           2.fastq                 
+#                                           realigned.BAM           
+#                                           realigned_sorted.BAM,   
+#                                           realigned_sorted.BAM.BAI
+# Purpose: Master Workflow calling fileParse and ReBamPlus.         
+#-------------------------------------------------------------------
+
+configfile: "ReBamPlus.yaml"
+
+subworkflow ReBamPlus:
+    workdir: "ReBamPlus/"
+
+rule all:
+    #input: ReBamPlus("bam/Pfeiffer2_realigned_sorted.bam.bai")
+    #input: expand(ReBamPlus("{bamDIR}/Pfeiffer2_realigned_sorted.bam.bai"), bamDIR=config["bamDIR"])
+    #input: ReBamPlus(expand("{bamDIR}/Pfeiffer2_realigned_sorted.bam.bai", bamDIR=config["bamDIR"]))
+    #input: ReBamPlus(expand("{bamDIR}/Pfeiffer2_realigned_sorted.bam.bai", bamDIR=config["bamDIR"]))
+    #input: expand(ReBamPlus("{bamDIR}/{samples}_realigned_sorted.bam.bai"), bamDIR=config["bamDIR"], samples=config["sample"])
+    input: ReBamPlus(expand("{bamDIR}/{samples}_realigned_sorted.bam.bai", bamDIR=config["bamDIR"], samples=config["sample"]))

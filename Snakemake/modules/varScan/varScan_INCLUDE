@@ -1,0 +1,47 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-03-06                                      
+#-----------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/varScan/varScan.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .mpileup        
+# Output:                                   varScan.snps.vcf
+# Purpose: Generate VCF output from a MPileup file. Able to 
+#   perform analysis on a per-chromosome basis if requested.
+#-----------------------------------------------------------
+
+
+# All modules in this workflow require the following paramters to be set.
+#       outputDIR:    ~Directory for storing all generated files
+#       mpileDIR:     ~Directory containing '.mpileup' files
+#       vcfDIR:       ~Directory for storing generated '.VCF' files
+#       minCOV:       ~Minimum read depth at a position to make a call
+#       minFREQ:      ~Minimum variant allele frequency threshold
+#       pVALUE:       ~Default p-value threshold for calling variants
+#       strandFILT:   ~Ignore variants with >90% support on one strand
+
+
+########################################################################################################
+#                                  Include all required Snakefiles.                                    #
+########################################################################################################
+
+include: "mpileup2snp"
+# 1 * mpileup2snp - '.VCF' generation from '.mpileup' file.
+# 1   minREAD:        ~Minimum supporting reads at a position to call variants
+# 1   minQUAL:        ~Minimum base quality at a position to count a read
+# 1   outVCF:         ~If set to 1, outputs in VCF format
+# 1   varScanChrSplit ~Process samples by chromosome, and then merge to single '.VCF'
+
+include: "mpileup2indel"
+# 2 * mpileup2indel - '.VCF' generation from '.mpileup' file.
+# 2   minREAD:        ~Minimum supporting reads at a position to call variants
+# 2   minQUAL:        ~Minimum base quality at a position to count a read
+# 2   outVCF:         ~If set to 1, outputs in VCF format
+# 2   varScanChrSplit ~Process samples by chromosome, and then merge to single '.VCF'
+
+#include: "somatic"
+# 2 * somatic - '.VCF' generation from '.mpileup' file.
+# 2   minSTRAND:      ~Minimum # of strands on which variant observed
+# 2   posVALID:       ~If set to 1, outputs all compared positions even if non-variant
+
+
+########################################################################################################
