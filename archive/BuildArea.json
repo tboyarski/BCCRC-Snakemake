@@ -1,9 +1,0 @@
-# Cluster specific arguments allowing for the specification of cluster performance architecture 
-# Run using: snakemake --jobs 10 --cluster-config BuildArea.json --drmaa "{cluster.minSpec}"
-
-{ 
-    "__default__" :
-    {
-        "clusterSpec" : "-V -S /bin/bash -o log/stdout -e log/stderr -l h_vmem=10G -pe ncpus 1",
-    }
-}
