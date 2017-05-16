@@ -1,0 +1,29 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:	    2017-03-28                                      
+#-----------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/annontate/annoate.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .vcf
+# Output:                                   .cosmic.vcf
+# Purpose: Annotate a '.VCF' file via canonical form.
+#-----------------------------------------------------------
+from time import gmtime, strftime
+from subprocess import call
+
+rule cosmic:
+    input:
+        expand("{outputDIR}/{annotateDIR}/{{sampleCoS}}.vcf", outputDIR=config["outputDIR"], annotateDIR=config["annotateDIR"])
+    output:
+        expand("{outputDIR}/{annotateDIR}/{{sampleCoS}}.cosmic_annotated.vcf", outputDIR=config["outputDIR"], annotateDIR=config["annotateDIR"])
+    params:
+        logNAME="cosmic." + strftime("%Y-%m-%d.%H-%M-%S", gmtime()),
+        baseARGS=config["annotateVerbose"]+' '+config["annotateID"]+' '+config["snpSiftCosmic"]
+    log:
+        "log/" + config["annotateDIR"]
+    run: 
+        callString=config["annotate_javaProg"] + ' ' + config["annotate_snpSiftProg"] \
+        + ' annotate ' + str(params.baseARGS) + ' ' + str(input) + ' > ' + str(output) \
+        + " 2> " + str(log) + "/" + str(params.logNAME)
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-------------------------------------------------------------------------------------------------------

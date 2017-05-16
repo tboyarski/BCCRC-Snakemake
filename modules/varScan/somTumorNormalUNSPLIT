@@ -1,0 +1,38 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:     2017-04-19
+#-----------------------------------------------------------
+# Call: call("python " + ROOT_PATH + "/modules/varScan/varScan.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Rule specific configurations set in:      varScan.json
+# Rule specific parameters set in:          varScan.yaml
+# Input:                                    .mpileup
+# Output:                                   .chr.snps.vcf
+#                                           .chr.indels.vcf
+# Purpose: Generate VCF output from a MPileup file.         
+#
+#   **Note** Varscan somatic must produce both snp and
+#       indel file, no calls exist to get only one or other.
+#-----------------------------------------------------------
+from time import localtime, strftime
+from subprocess import call
+
+rule somTumorNormalUNSPLIT:
+    input:
+        expand("{outputDIR}/{mpileDIR}/{{samplenSTNU}}.mpileup", outputDIR=config["outputDIR"], mpileDIR=config["mpileDIR"]),
+        expand("{outputDIR}/{mpileDIR}/{{sampletSTNU}}.mpileup", outputDIR=config["outputDIR"], mpileDIR=config["mpileDIR"])
+    output:
+        expand("{outputDIR}/{varScanDIR}/{{sampletSTNU}}_{{samplenSTNU}}.varScan.{varTypeSTNU}.vcf", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"], varTypeSTNU=config["varType"])
+    params:
+        baseArgs=config["minCOV"]+" "+config["minREAD"]+" "+config["minQUAL"]+" "+config["minFREQ"]+" "+config["pVALUE"]+" "+config["strandFILT"]+" "+config["outVCF"]+" "+config["minSTRAND"]+" "+config["posVALID"],
+        baseFile=config["outputDIR"] + '/' + config["varScanDIR"] + '/{sampletSTNU}_{samplenSTNU}.',
+        logNAME="somTumorNormalUNSPLIT." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["varScanDIR"]
+    run:
+        # Generate a '.TXT' file of entire sample
+        callString=config["somTumorNormal_varScanProg"] + ' somatic ' + str(input) \
+        +  ' --output-snp ' + str(output[0]) + ' --output-indel ' + str(output[1]) + ' ' + str(params.baseArgs) \ 
+        + ' 2> ' + str(log) + "/" + str(params.logNAME) + ".stderr"
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-------------------------------------------------------------------------------------------------------

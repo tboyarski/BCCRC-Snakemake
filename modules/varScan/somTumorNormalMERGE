@@ -1,0 +1,39 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:     2017-04-18
+#-----------------------------------------------------------
+# Call: call("python " + ROOT_PATH + "/modules/varScan/varScan.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Rule specific configurations set in:      varScan.json
+# Rule specific parameters set in:          varScan.yaml
+# Input:                                    .chr.vcf
+# Output:                                   .vcf
+# Purpose: Combine chromosome '.VCF' files.
+#-----------------------------------------------------------
+from time import localtime, strftime
+from subprocess import call
+
+rule somTumorNormalMERGE:
+    input:
+        expand("{outputDIR}/{varScanSplitDIR}/{{sampletSTNM}}_{{samplenSTNM}}.{chrSTNM}.varScan.{{varTypeSTNM}}.vcf", outputDIR=config["outputDIR"], varScanSplitDIR=config["varScanSplitDIR"], chrSTNM=config["chrLIST"])
+    output:
+        expand("{outputDIR}/{varScanDIR}/{{sampletSTNM}}_{{samplenSTNM}}.varScan.{{varTypeSTNM}}.vcf", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"])
+    params:
+        logNAME="somTumorNormalMERGE." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["varScanDIR"]
+    run:
+        call('echo "' + str(params.logNAME) + ':\n **Python Scripts Merging Files. No Shell Calls**\n" >> ' + config["shellCallFile"], shell=True)
+        with open(str(output), "w+") as outputTARGET:
+            # A1. Copy over header-data shared across all .VCF files
+            with open(str(input[0]), "r+") as inputTARGET:
+                for line in inputTARGET:
+                    if line.startswith("#"):
+                        outputTARGET.write(line)
+            # B1. Iterate over all input files,
+            for file in str(input).split():
+                with open(file, "r+") as inputTARGET:
+                    # B2 Iterate over each line for current input files
+                    for line in inputTARGET:
+                        if line.startswith("#") == False:
+                            outputTARGET.write(line)
+#-------------------------------------------------------------------------------------------------------

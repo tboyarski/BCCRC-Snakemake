@@ -1,0 +1,28 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-03-28
+#-----------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/annontate/annoate.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .vcf
+# Output:                                   .snp.vcf
+# Purpose: Annotate a '.VCF' file via snp form.
+#-----------------------------------------------------------
+from time import gmtime, strftime
+from subprocess import call
+
+rule snp:
+    input:
+        expand("{outputDIR}/{annotateDIR}/{{sampleSnP}}.vcf", outputDIR=config["outputDIR"], annotateDIR=config["annotateDIR"])
+    output:
+        expand("{outputDIR}/{annotateDIR}/{{sampleSnP}}.snp_annotated.vcf", outputDIR=config["outputDIR"], annotateDIR=config["annotateDIR"])
+    params:
+        logNAME="snp." + strftime("%Y-%m-%d.%H-%M-%S", gmtime())
+    log:
+        "log/" + config["annotateDIR"]
+    run:
+        callString=config["annotate_javaProg"] + ' ' + config["annotate_snpSiftProg"] \
+        + ' annotate ' + config["annotateDbSnp"] + ' ' + str(input) + ' > ' + str(output) \
+        + ' 2> ' + str(log) + '/' + str(params.logNAME)
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-------------------------------------------------------------------------------------------------------
