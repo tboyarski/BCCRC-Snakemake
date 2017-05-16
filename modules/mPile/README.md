@@ -1,4 +1,4 @@
-# mPileUp Module (Multi-Snakemake)
+# mPile Module (Multi-Snakemake)
 This directory contains the mPile module. It is a multi-module system. The modules differ in their ability 
 to process '.BAM' files at a per chromosome granularity. The option of chromosomal granularity is not made
 within this rule, but rather, it is made by the manner in which this rule is called. The rule which calls
@@ -24,7 +24,7 @@ Will be stored in: "log/mPile"
 Module | Argument | Default Value | Description
 :--------: | :--------: | :--------: | :--------
 All | refFILE | GRCh37-lite.fa | Name of the reference genome file in the refDIR directory.
-mPileSPLIT | chrLIST | ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrM', 'chrX', 'chrY'] | List of human chromosomes
+mPileSPLIT | chrLIST | ['chr1', ... 'chrY'] OR ['1', ... 'Y'] | List of organism (Human or Mouse) and format (NCBI or UCS) specific chromosomes
 
 ## Module Specific Paramters:
 Module | Argument | Default Value | Description
@@ -32,6 +32,6 @@ Module | Argument | Default Value | Description
 All | bitFLAG | 512 | Bitwise flag
 All | countORPHAN | -A | Count orphan reads
 All | noBAQ | -B | BAQ computation
-All | maxDEP | -q 10000000 | Maximum read depth
-All | mapQUAL | -d 20 | Minimum quality of reads to be used.
-
+All | maxDEP | -d 10000000 | Maximum read depth
+All | mapQUAL | -q 20 | Minimum quality of reads to be used.
+All | bedFILE | '' | Sets the target region to call variants (Bed File Format). Use '-l ' + bedFILE name.

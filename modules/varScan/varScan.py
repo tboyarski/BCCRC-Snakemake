@@ -33,19 +33,21 @@ if (os.path.isdir("log")) != True:
 if (os.path.isdir("log/" + moduleNAME) != True):
     os.mkdir("log/" + moduleNAME)
     print(moduleNAME + ".py \tCreating: log/" + moduleNAME)
+    os.mkdir("log/" + moduleNAME + 'Split')
+    print(moduleNAME + ".py \tCreating: log/" + moduleNAME + 'Split')
 
 
 # 2 --- YAML File
 # Open and append to file the following required paramters.
 with open(sys.argv[1], "a+") as yamlTARGET:
     # 2A. Software
-    mpileup2snp_varScanProg = "mpileup2snp_varScanProg: varScan\n"
-    mpileup2indel_varScanProg = "mpileup2indel_varScanProg: varScan\n"
-    somatic_varScanProg = "somatic_varScanProg: varScan\n"
+    mpileup2_varScanProg = "mpileup2_varScanProg: varscan\n"
+    somTumorNormal_varScanProg = "somTumorNormal_varScanProg: varscan\n"
     # 2B. Shared variables
-    vcfDIR="vcfDIR: vcf\n"
+    varScanSplitDIR="varScanSplitDIR: varScanSplit\n"
     varScanDIR="varScanDIR: varScan\n"
     varScanChrSplit="varScanChrSplit: True\n"
+    varType="varType: ['snp', 'indel']\n"
     minCOV = "minCOV: --min-coverage 20\n"
     minREAD = "minREAD: --min-reads2 10\n"
     minQUAL = "minQUAL: --min-avg-qual 20\n"
@@ -53,18 +55,24 @@ with open(sys.argv[1], "a+") as yamlTARGET:
     pVALUE = "pVALUE: --p-value 0.05\n"
     strandFILT = "strandFILT: --strand-filter 0\n"
     outVCF = "outVCF: --output-vcf 1\n"
-    # 2C. mpileup2snp only variables
-    # 2D. mpileup2indel only variables
-    # 2E. Somatic only variables
     minSTRAND = "minSTRAND: --min-strands2 0\n"
     posVALID = "posVALID: --validation 1\n"
-    # 2F. Write to file.
+    # 2C. mpileup2SPLIT only variables
+    # 2D. mpileup2UNSPLIT only variables
+    # 2E. mpileup2MERGE only variables
+    # 2F. somTumorNormalUNSPLIT
+    # 2G. somTumorNormalSPLIT
+    # 2H. somTumorNormalMERGE
+    # 2I. Write to file.
     yamlTARGET.write("\n\n\n#################################\n# ---- " + moduleNAME + " Parameters ----- #\n#################################\n")
-    yamlTARGET.write("#       -- Software --          #\n" + mpileup2snp_varScanProg + mpileup2indel_varScanProg + somatic_varScanProg)
-    yamlTARGET.write("#    -- Shared Variables --     #\n" + vcfDIR + varScanDIR + varScanChrSplit + minCOV + minREAD + minQUAL + minFREQ + pVALUE + strandFILT + outVCF)
-    yamlTARGET.write("#   -- mpileup2snp Specific --  #\n")
-    yamlTARGET.write("# -- mpileup2indels Specific -- #\n")
-    yamlTARGET.write("#    -- somatic Specific --     #\n" + minSTRAND + posVALID)
+    yamlTARGET.write("#       -- Software --          #\n" + mpileup2_varScanProg + somTumorNormal_varScanProg)
+    yamlTARGET.write("#    -- Shared Variables --     #\n" + varScanSplitDIR + varScanDIR + varScanChrSplit + varType + minCOV + minREAD + minQUAL + minFREQ + pVALUE + strandFILT + outVCF + minSTRAND + posVALID)
+    yamlTARGET.write("#   - mpileup2SPLIT Specific -  #\n")
+    yamlTARGET.write("#  - mpileup2UNSPLIT Specific - #\n")
+    yamlTARGET.write("#   - mpileup2MERGE Specific -  #\n")
+    yamlTARGET.write("#   somTumorNormalSPLIT Spec.   #\n")
+    yamlTARGET.write("#  somTumorNormalUNSPLIT Spec.  #\n")
+    yamlTARGET.write("#   somTumorNormalMERGE Spec.   #\n")
     yamlTARGET.write("#################################\n")
 
 
@@ -78,7 +86,9 @@ with open(sys.argv[2], "r+") as jsonTARGET:
     jsonRULE['clusterSpec'] = '-V -S /bin/bash -o log/' + moduleNAME + ' -e log/' + moduleNAME + ' -l h_vmem=10G -pe ncpus 1'
     jsonOBJ['mpileup2snp'] = jsonRULE
     jsonOBJ['mpileup2indel'] = jsonRULE
-    jsonOBJ['somatic'] = jsonRULE
+    jsonOBJ['somTumorNormalUNSPLIT'] = jsonRULE
+    jsonOBJ['somTumorNormalSPLIT'] = jsonRULE
+    jsonOBJ['somTumorNormalMERGE'] = jsonRULE
 # Recreate JSON file to delete exiting text.
 with open(sys.argv[2], "w+") as jsonTARGET:
     json.dump(jsonOBJ, jsonTARGET, indent=4)
@@ -91,15 +101,18 @@ with open(sys.argv[3], "a+") as pipeTARGET:
         "#  Included:\n" +
         "#    mpileup2snp:    Generate VCF output of SNPs from a mPileUp file.\n" + 
         "#    mpileup2indel:    Generate VCF output of INDELs from a mPileUp file.\n" + 
-        "#    somatic:    Coming soon!.\n" + 
+        "#    somTumorNormalUNSPLIT:    Generate VCF output for tumor-normal pairs.\n" + 
+        "#    somTumorNormalSPLIT:    Genereate VCF output for tumor-normal pairs, process chromosomes in parallel.\n" + 
+        "#    somTumorNormalMERGE:    Combine single chromosome VCF tumor-normal pairs output into single file.\n" + 
         "#  Files:\n" +
         "#    input:      X.mpileup\n" +
         "#    output:     X.varScan.snps.vcf\n" +
+        "#                X.varScan.indels.vcf\n" +
         'include: "/home/tboyarski/share/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake/modules/' + moduleNAME + '/' + moduleNAME + '_INCLUDE"\n' +
         "#  Required:\n" +
         "#    >mPile:      Generate a MPileUp file from a BAM file.\n" +
         '#    @include: "/home/tboyarski/share/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake/modules/mPile/mPile_INCLUDE"\n' +
         "#  Call via:\n" +
-        '# expand("{outputDIR}/{vcfDIR}/{samples}.varScan.snps.vcf", outputDIR=config["outputDIR"], vcfDIR=config["vcfDIR"], samples=config["sample"])\n' +
-        '# expand("{outputDIR}/{vcfDIR}/{samples}.varScan.indels.vcf", outputDIR=config["outputDIR"], vcfDIR=config["vcfDIR"], samples=config["sample"])\n'
-    )
+        '# expand("{outputDIR}/{vcfDIR}/{samples}.varScan.{varType}.vcf", outputDIR=config["outputDIR"], vcfDIR=config["vcfDIR"], samples=config["sample"], varType=config["varType"])      #mpileup2\n' +
+        '# expand("{outputDIR}/{vcfDIR}/{index[1][tumor]}_{index[1][normal]}.varScan.{varType}.txt", outputDIR=config["outputDIR"], vcfDIR=config["vcfDIR"], index=pandas.read_table(config["sampleFILE"], " ").iterrows(), varType=config["varType"])  #somTumorNormal\n'
+        )

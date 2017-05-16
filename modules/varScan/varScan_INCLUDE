@@ -23,25 +23,37 @@
 ########################################################################################################
 #                                  Include all required Snakefiles.                                    #
 ########################################################################################################
+if config["varScanChrSplit"] == True:
+    if config["sampleFORMAT"] == 'single':
+        include: "mpileup2SPLIT"
+        # 1 * mpileup2SPLIT - '.VCF' generation from '.mpileup' file.
+        # 1   minREAD:        ~Minimum supporting reads at a position to call variants
+        # 1   minQUAL:        ~Minimum base quality at a position to count a read
+        # 1   outVCF:         ~If set to 1, outputs in VCF format
+        # 1   varScanChrSplit ~Process samples by chromosome, and then merge to single '.VCF'
+        include: "mpileup2MERGE"
+        # 2 * mpileup2MERGE - '.VCF' generation from '.mpileup' file.
+    
+    if config["sampleFORMAT"] == 'pair':
+        include: "somTumorNormalSPLIT"
+        # 3 * somTumorNormalSPLIT - Tumor-normal variant caller for chromosome file.
+        # 3   minSTRAND:      ~Minimum # of strands on which variant observed
+        # 3   posVALID:       ~If set to 1, outputs all compared positions even if non-variant
+        include: "somTumorNormalMERGE"
+        # 4 * somTumorNormalMERGE - Merges '.VCF' Chromosome files
 
-include: "mpileup2snp"
-# 1 * mpileup2snp - '.VCF' generation from '.mpileup' file.
-# 1   minREAD:        ~Minimum supporting reads at a position to call variants
-# 1   minQUAL:        ~Minimum base quality at a position to count a read
-# 1   outVCF:         ~If set to 1, outputs in VCF format
-# 1   varScanChrSplit ~Process samples by chromosome, and then merge to single '.VCF'
 
-include: "mpileup2indel"
-# 2 * mpileup2indel - '.VCF' generation from '.mpileup' file.
-# 2   minREAD:        ~Minimum supporting reads at a position to call variants
-# 2   minQUAL:        ~Minimum base quality at a position to count a read
-# 2   outVCF:         ~If set to 1, outputs in VCF format
-# 2   varScanChrSplit ~Process samples by chromosome, and then merge to single '.VCF'
-
-#include: "somatic"
-# 2 * somatic - '.VCF' generation from '.mpileup' file.
-# 2   minSTRAND:      ~Minimum # of strands on which variant observed
-# 2   posVALID:       ~If set to 1, outputs all compared positions even if non-variant
+elif config["varScanChrSplit"] == False:
+    include: "mpileup2UNSPLIT"
+    # 5 * mpileup2indel - '.VCF' generation from '.mpileup' file.
+    # 5   minREAD:        ~Minimum supporting reads at a position to call variants
+    # 5   minQUAL:        ~Minimum base quality at a position to count a read
+    # 5   outVCF:         ~If set to 1, outputs in VCF format
+    # 5   varScanChrSplit ~Process samples by chromosome, and then merge to single '.VCF'
 
 
+    include: "somTumorNormalUNSPLIT"
+    # 6 * somTumorNormalUNSPLIT - Tumor-normal variant caller for genomic file.
+    # 6   minSTRAND:      ~Minimum # of strands on which variant observed
+    # 6   posVALID:       ~If set to 1, outputs all compared positions even if non-variant
 ########################################################################################################

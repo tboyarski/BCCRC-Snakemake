@@ -1,4 +1,4 @@
-# ReBam Module (Multi-Snakemake)
+# reBam Module (Multi-Snakemake)
 This directory contains the ReBam module. It is a multi-module system and contains 
 four modules which are heavily correlated. 
 
@@ -11,7 +11,7 @@ See invidual files for expanded explanations of their purpose and the manner in 
 * filteredBAM: Filtering of a '.BAM' file.
 * rmdupBAM: Remove duplicates from a '.BAM' file.
 * markdupBAM: Mark diplicates in a '.BAM' file and produce metrics.
-* **ReBam: Master file which includes the four modules above.**
+* **reBam: Master file which includes the four modules above.**
 
 ## Logging:
 Will be stored in: "log/reBam"
@@ -37,5 +37,5 @@ All (!undoBAM) | reBamDIR | reBam | Directory to contain the processed '.BAM' fi
 undoBAM & alignBAM | fastqDIR | fastq | Directory to contain the '.fastq' files.
 sortBAM | sortProg | samtools | Decide if module uses 'samtools' or 'biobambam' to sort the '.BAM' file. 
 undoBAM | rawBamDIR | rawBam | Directory to contain the unprocessed '.BAM' files.
-indexBAM | fileTAG | _realigned_sorted | String used to pull together various BAM-type modules.
+indexBAM | fileTAG | _realigned_filtered_markdup_sorted | String used to pull together various BAM-type modules.
 filteredBAM | bitFLAG | 512 | Must pass QC threshold.

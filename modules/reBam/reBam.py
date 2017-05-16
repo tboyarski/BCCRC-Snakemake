@@ -48,6 +48,7 @@ if (os.path.isdir("log/" + moduleNAME) != True):
 with open(sys.argv[1], "a+") as yamlTARGET:
     # 2A. Software
     undoBAM_picardProg="undoBAM_picardProg: picard\n"
+    undoBAM_samtoolsProg="undoBAM_samtoolsProg: samtools\n"
     alignBAM_bwaProg="alignBAM_bwaProg: bwa\n"
     alignBAM_samtoolsProg="alignBAM_samtoolsProg: samtools\n"
     sortBAM_samtoolsProg="sortBAM_samtoolsProg: samtools\n"
@@ -62,21 +63,27 @@ with open(sys.argv[1], "a+") as yamlTARGET:
     reBamDIR="reBamDIR: reBam\n"
     # 2. undoBAM only variables
     rawBamDIR="rawBamDIR: rawBam\n"
+    samtoolsSortMem="samtoolsSortMem: 4G\n"
+    picardValStringency="picardValStringency: VALIDATION_STRINGENCY=LENIENT\n"
+    picardMaxRec="picardMaxRec: MAX_RECORDS_IN_RAM=5000000\n"
     # 2. alignBAM only variables
+    picardCompatibility="picardCompatibility: -M\n"
+    coreNumber="coreNumber: -t 4\n"
+    seqPlatform="seqPlatform: ILLUMINA\n"
     # 2. sortBAM only variables
-    sortProg="sortProg: samtools\n"
+    sortProg="sortProg: biobambam\n"
     # 2. indexBAM only variables
     fileTAG="fileTAG: _realigned_filtered_markdup_sorted\n"
     # 2. filteredBAM only variables
     # 2. rmdupBAM only variables
     # 2. Write to file
     yamlTARGET.write("\n\n#################################\n# ----- " + moduleNAME + " Parameters ------ #\n#################################\n")
-    yamlTARGET.write("#       -- Software --          #\n" + undoBAM_picardProg + alignBAM_bwaProg + alignBAM_samtoolsProg \
+    yamlTARGET.write("#       -- Software --          #\n" + undoBAM_picardProg + undoBAM_samtoolsProg + alignBAM_bwaProg + alignBAM_samtoolsProg \
             + sortBAM_samtoolsProg + sortBAM_bamsortProg + indexBAM_samtoolsProg + filteredBAM_samtoolsProg + rmdupBAM_samtoolsProg \
             + markdupBAM_samtoolsProg + markdupBAM_bammarkduplicatesProg) 
     yamlTARGET.write("#    -- Shared Variables --     #\n" + fastqDIR + reBamDIR)
-    yamlTARGET.write("#     -- undoBAM Specific --    #\n" + rawBamDIR)
-    yamlTARGET.write("#    -- alignBAM Specific --    #\n")
+    yamlTARGET.write("#     -- undoBAM Specific --    #\n" + rawBamDIR + samtoolsSortMem + picardValStringency + picardMaxRec)
+    yamlTARGET.write("#    -- alignBAM Specific --    #\n" + picardCompatibility + coreNumber + seqPlatform)
     yamlTARGET.write("#    -- sortBAM Specific --     #\n" + sortProg)
     yamlTARGET.write("#    -- indexBAM Specific --    #\n" + fileTAG)
     yamlTARGET.write("#   -- filteredBAM Specific --  #\n")

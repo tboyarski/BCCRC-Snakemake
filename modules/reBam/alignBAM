@@ -2,6 +2,7 @@
 # Author:   Tim Boyarski                                    
 # Date:	    2017-03-06                                      
 #-----------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/reBam/reBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
 # Input:                                    1.fastq         
 #                                           2.fastq         
 # Output:                                   _realigned.bam  
@@ -23,23 +24,37 @@
 #-----------------------------------------------------------
 from time import localtime, strftime
 from subprocess import call
+from re import sub
 
 rule alignBAM:
     input:
-        expand("{outputDIR}/{fastqDIR}/{{samples}}.{readDirection}.fastq", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], readDirection=["1", "2"]),
+        expand("{outputDIR}/{fastqDIR}/{{sampleAB}}.{readDirection}.fastq.gz", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], readDirection=["1", "2"]),
         expand("{inputDIR}/{refDIR}/{refFILE}", inputDIR=config["inputDIR"], refDIR=config["refDIR"], refFILE=config["refFILE"])
     output:
-        temp(expand("{outputDIR}/{reBamDIR}/{{samples}}_realigned.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"]))
+        expand("{outputDIR}/{reBamDIR}/{{sampleAB}}_realigned.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"])
     params:
+        baseFILE=re.sub('_lane_\d','',"{sampleAB}"),
+        baseARGS=config["coreNumber"],
+        readGroupString1='-R \"@RG\tID:{sampleAB}\tLB:',
+        readGroupString2='\tPL:'+config["seqPlatform"]+'\tSM:',
         logNAME="alignBAM." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
     log:
         "log/" + config["reBamDIR"]
     run:
-        call(config["alignBAM_bwaProg"] + ' mem ' + str(input[2]) + ' ' + str(input[0]) + ' ' + str(input[1]) \
+#        call(config["alignBAM_bwaProg"] + ' mem ' + str(input[2]) + ' ' + str(input[0]) + ' ' + str(input[1]) \
+#        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.bwa.stderr' \
+#        + ' | ' + config["alignBAM_samtoolsProg"] + ' view -bhS - > ' + str(output) \
+#        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.samtools.stderr', shell=True)
+
+        callString=config["alignBAM_bwaProg"] + ' mem ' + str(params.baseARGS) + ' ' \
+        + str(params.readGroupString1) + str(params.baseFILE) + str(params.readGroupString2) + str(params.baseFILE + '\"') \
+        + ' ' + str(input[2]) + ' ' + str(input[0]) + ' ' + str(input[1]) \
         + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.bwa.stderr' \
         + ' | ' + config["alignBAM_samtoolsProg"] + ' view -bhS - > ' + str(output) \
-        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.samtools.stderr', shell=True)
+        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.samtools.stderr'
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
         # Check if config file set to have fastq files removed after use.
         if config["fastqKEEP"] == False:
             call('rm ' + str(input[0]) + ' ' + str(input[1]), shell=True)
-#-------------------------------------------------------------------------------------------------------
+# $(BWA_MEM) $(BWA_MEM_OPTS) -R \"@RG\tID:$*\tLB:\$${LBID}\tPL:${SEQ_PLATFORM}\tSM:\$${LBID}\" $(REF_FASTA) $(word 1,$^) $(word 2,$^) | $(SAMTOOLS) view -bhS - > $@")-------------------------------------------------------------------------------------------------------

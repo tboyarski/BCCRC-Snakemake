@@ -1,6 +1,6 @@
 #---------------------
 # Author: tboyarski
-# Date: 2017-04-01.01-37-29
+# Date: 2017-04-28.20-29-37
 #---------------------
 
 
@@ -8,9 +8,12 @@
 # ----- Global Variables ------ #
 #################################
 #       -- Parameters --        #
-fastqKEEP: False
+shellCallFile: shellCalls.txt
+fastqKEEP: True
+annotationSUFFIX: .snp_annotated.cosmic_annotated
 refFILE: GRCh37-lite.fa
-chrLIST: ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrM', 'chrX', 'chrY']
+#chrLIST: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'MT']
+chrLIST: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'MT', 'GL000207.1', 'GL000226.1', 'GL000229.1', 'GL000231.1', 'GL000210.1', 'GL000239.1', 'GL000235.1', 'GL000201.1', 'GL000247.1', 'GL000245.1', 'GL000197.1', 'GL000203.1', 'GL000246.1', 'GL000249.1', 'GL000196.1', 'GL000248.1', 'GL000244.1', 'GL000238.1', 'GL000202.1', 'GL000234.1', 'GL000232.1', 'GL000206.1', 'GL000240.1', 'GL000236.1', 'GL000241.1', 'GL000243.1', 'GL000242.1', 'GL000230.1', 'GL000237.1', 'GL000233.1', 'GL000204.1', 'GL000198.1', 'GL000208.1', 'GL000191.1', 'GL000227.1', 'GL000228.1', 'GL000214.1', 'GL000221.1', 'GL000209.1', 'GL000218.1', 'GL000220.1', 'GL000213.1', 'GL000211.1', 'GL000199.1', 'GL000217.1', 'GL000216.1', 'GL000215.1', 'GL000205.1', 'GL000219.1', 'GL000224.1', 'GL000223.1', 'GL000195.1', 'GL000212.1', 'GL000222.1', 'GL000200.1', 'GL000193.1', 'GL000194.1', 'GL000225.1', 'GL000192.1']
 #       -- Directory --         #
 inputDIR: input
 refDIR: ref
@@ -18,7 +21,9 @@ outputDIR: output
 bamDIR: bam
 metricsDIR: metrics
 #         -- Sample --          #
-sample: ['Pfeiffer2']
+sample: ['Pfeiffer', 'DB', 'MD903']
+sampleFILE: input/sampleFILEsingle.txt
+sampleFORMAT: single
 #################################
 
 
@@ -26,26 +31,34 @@ sample: ['Pfeiffer2']
 # ----- reBam Parameters ------ #
 #################################
 #       -- Software --          #
-undoBAM_picardProg: picard
-alignBAM_bwaProg: bwa
-alignBAM_samtoolsProg: samtools
-sortBAM_samtoolsProg: samtools
-sortBAM_bamsortProg: bamsort
-indexBAM_samtoolsProg: samtools
-filteredBAM_samtoolsProg: samtools
-rmdupBAM_samtoolsProg: samtools
-markdupBAM_samtoolsProg: samtools
-markdupBAM_bammarkduplicatesProg: bammarkduplicates2
+undoBAM_picardProg: ~/share/usr/anaconda/2.2.0/bin/picard
+undoBAM_samtoolsProg: /home/lchong/usr/local/bin/samtools
+alignBAM_bwaProg: ~/share/usr/bwa-0.7.5a/bwa
+alignBAM_samtoolsProg: /home/lchong/usr/local/bin/samtools
+sortBAM_samtoolsProg: /home/lchong/usr/local/bin/samtools
+sortBAM_bamsortProg: /home/lchong/share/usr/biobambam/0.0.185/bin/bamsort
+indexBAM_samtoolsProg: /home/lchong/usr/local/bin/samtools
+filteredBAM_samtoolsProg: /home/lchong/usr/local/bin/samtools
+rmdupBAM_samtoolsProg: /home/lchong/usr/local/bin/samtools
+markdupBAM_samtoolsProg: /home/lchong/usr/local/bin/samtools 
+markdupBAM_bammarkduplicatesProg: /home/lchong/share/usr/biobambam/0.0.185/bin/bammarkduplicates
 #    -- Shared Variables --     #
 fastqDIR: fastq
 reBamDIR: reBam
 #     -- undoBAM Specific --    #
 rawBamDIR: rawBam
+samtoolsSortMem: 4000000000
+picardValStringency: VALIDATION_STRINGENCY=LENIENT
+picardMaxRec: MAX_RECORDS_IN_RAM=5000000
 #    -- alignBAM Specific --    #
+picardCompatibility: -M
+## Putting '-M' in coreNumber because I deteled pircardCompatibility from module to match ...
+coreNumber: -M -t 4
+seqPlatform: ILLUMINA
 #    -- sortBAM Specific --     #
-sortProg: samtools
+sortProg: biobambam
 #    -- indexBAM Specific --    #
-fileTAG: _realigned_filtered_markdup_sorted
+fileTAG: _realigned_sorted_filtered_markdup
 #   -- filteredBAM Specific --  #
 #    -- rmdupBAM Specific --    #
 #################################
@@ -75,13 +88,14 @@ mapQUAL: -q 20
 # ---- varScan Parameters ----- #
 #################################
 #       -- Software --          #
-mpileup2snp_varScanProg: varScan
-mpileup2indel_varScanProg: varScan
-somatic_varScanProg: varScan
+#mpileup2_varScanProg: java -Xmx2G -jar /home/tboyarski/share/usr/varscan/2.3.9/VarScan.jar
+mpileup2_varScanProg: ~/share/usr/jre1.7.0_25/bin/java -Xmx2G -jar /home/tboyarski/share/usr/varscan/2.3.9/VarScan.jar
+somTumorNormal_varScanProg: java -Xmx2G -jar /home/tboyarski/share/usr/varscan/2.3.9/VarScan.jar
 #    -- Shared Variables --     #
-vcfDIR: vcf
+varScanSplitDIR: varScanSplit
 varScanDIR: varScan
 varScanChrSplit: True
+varType: ['snp']
 minCOV: --min-coverage 20
 minREAD: --min-reads2 10
 minQUAL: --min-avg-qual 20
@@ -89,13 +103,77 @@ minFREQ: --min-var-freq 0.01
 pVALUE: --p-value 0.05
 strandFILT: --strand-filter 0
 outVCF: --output-vcf 1
-#   -- mpileup2snp Specific --  #
-# -- mpileup2indels Specific -- #
-#    -- somatic Specific --     #
 minSTRAND: --min-strands2 0
 posVALID: --validation 1
+#   - mpileup2SPLIT Specific -  #
+#  - mpileup2UNSPLIT Specific - #
+#   - mpileup2MERGE Specific -  #
+#   somTumorNormalSPLIT Spec.   #
+#  somTumorNormalUNSPLIT Spec.  #
+#   somTumorNormalMERGE Spec.   #
 #################################
 
-# muTect Parameters:
-muTectDIR: muTect
-muTect: ~/share/usr/muTect/0.2.2/mutect.jar
+
+#################################
+# ----- annotate Parameters ------ #
+#################################
+#       -- Software --          #
+annotate_javaProg: ~/share/usr/jre1.7.0_25/bin/java -Xmx2G
+#annotate_javaProg: ~/share/usr/JDK/1.8.0_121/bin/java -Xmx4G
+#annotate_javaProg: ~/share/usr/jre1.6.0_31/bin/java -Xmx2G
+#annotate_javaProg: ~/share/usr/anaconda/4.3.0/envs/CentOS5-Compatible/bin/java -Xmx2G
+#annotate_javaProg: /gsc/software/linux-x86_64-centos5/java-1.7.0-u13/bin/java -Xmx2G
+annotate_snpSiftProg: -jar /home/tboyarski/share/usr/snpEff/snpEff-3.5/SnpSift.jar
+#annotate_snpSiftProg: -jar /home/tboyarski/share/usr/anaconda/4.3.0/envs/CentOS5-Compatible/share/snpeff-4.1l-0/SnpSift.jar
+#annotate_snpSiftProg: -jar /home/tboyarski/share/usr/anaconda/4.3.0/share/snpsift-4.3-2/SnpSift.jar
+annotate_snpEffProg: -jar /home/tboyarski/share/usr/snpEff/snpEff-3.5/snpEff.jar
+#annotate_snpEffProg: -jar /home/tboyarski/share/usr/anaconda/4.3.0/envs/CentOS5-Compatible/share/snpeff-4.1l-0/snpEff.jar
+#annotate_snpEffProg: -jar /home/tboyarski/share/usr/anaconda/4.3.0/share/snpeff-4.3-3/snpEff.jar
+#    -- Shared Variables --     #
+annotateDIR: annotate
+annotateVerbose: -v
+annotateID: -id
+annotateDbSnp: ~/share/references/dbsnp/dbsnp_137.b37.vcf
+#   -- canonical Specific --    #
+snpEffGenomeVersion: GRCh37.72
+snpEffConfig: -c /home/tboyarski/share/usr/snpEff/snpEff-3.5/snpEff.config
+#snpEffConfig: -c /home/tboyarski/share/usr/anaconda/4.3.0/envs/CentOS5-Compatible/share/snpeff-4.1l-0/snpEff.config
+#snpEffConfig: -c /home/tboyarski/share/usr/anaconda/4.3.0/share/snpeff-4.3-3/snpEff.config
+#snpEffConfig: -c ~/share/references/snpEff/4.3i/GRCh37.75/
+snpEffFormat: -i vcf
+snpEffHGVS: -hgvs
+snpEffDownstream: -no-downstream
+snpEffIntergenic: -no-intergenic
+snpEffUpstream: -no-upstream
+snpEffgatk: -o gatk
+#     -- cosmic Specific --     #
+snpSiftCosmic: ~/share/references/cosmic/CosmicCodingMuts_v68.b37.vcf
+#      -- indel Specific --     #
+knownIndel1000G: ~/share/references/1000g/1000G_phase1.indels.b37.with_id.vcf
+knownIndelMills1000G: ~/share/references/1000g/Mills_and_1000G_gold_standard.indels.b37.with_id.vcf
+#       -- snp Specific --      #
+#################################
+
+
+#################################
+# ----- getVarTable Parameters ------ #
+#################################
+#       -- Software --          #
+getVarTable_javaProg: ~/share/usr/jre1.7.0_25/bin/java -Xmx2G
+getVarTable_snpSiftProg: -jar /home/tboyarski/share/usr/snpEff/snpEff-3.5/SnpSift.jar
+getVarTable_vcfEffOnePerLineProg: /home/tboyarski/share/usr/snpEff/snpEff-3.5/scripts/vcfEffOnePerLine.pl
+#    -- Shared Variables --     #
+vcfSampleSingle: 0
+vcfInfoFieldsDbSnp: CDA KGValidated OM PM GMAF
+vcfGenIDsSingle: GT GQ SDP DP RD AD FREQ PVAL RBQ ABQ RDF RDR ADF ADR
+vcfGenFieldsSingle: GEN[0].GT GEN[0].GQ GEN[0].SDP GEN[0].DP GEN[0].RD GEN[0].AD GEN[0].FREQ GEN[0].PVAL GEN[0].RBQ GEN[0].ABQ GEN[0].RDF GEN[0].RDR GEN[0].ADF GEN[0].ADR
+vcfSamplePair: 0 1
+vcfInfoFieldsPair: DP SS SSC GPV SPV CDA KGValidated OM PM GMAF
+vcfGenIDsPair: GT GQ DP RD AD FREQ DP4
+vcfGenFieldsPair: GEN[0].GT GEN[1].GT GEN[0].GQ GEN[1].GQ GEN[0].DP GEN[1].DP GEN[0].RD GEN[1].RD GEN[0].AD GEN[1].AD GEN[0].FREQ GEN[1].FREQ GEN[0].DP4 GEN[1].DP4
+vcfFields: CHROM POS ID REF ALT QUAL FILTER
+effFields: ['"EFF[*].EFFECT"', '"EFF[*].IMPACT"', '"EFF[*].FUNCLASS"', '"EFF[*].CODON"', '"EFF[*].AA"', '"EFF[*].GENE"', '"EFF[*].BIOTYPE"', '"EFF[*].CODING"', '"EFF[*].TRID"', '"EFF[*].RANK"']
+#  -- getVarTable Specific --   #
+getVarTableDIR: getVarTable
+getVarTableFlag: True
+#################################

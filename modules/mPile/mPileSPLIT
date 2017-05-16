@@ -2,7 +2,7 @@
 # Author:   Tim Boyarski                                    
 # Date:	    2017-03-21                                      
 #-----------------------------------------------------------
-# Call: call("python " + ROOT_PATH + "/modules/mPile/mPile.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Call: call("python " + snakeDIR + "/modules/mPile/mPile.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
 # Input:                                    .BAM            
 # Output:                                   .mpileup        
 # Purpose: Generate an mPileUp file from a BAM file.        
@@ -12,24 +12,22 @@ from subprocess import call
 
 rule mPileSPLIT:
     input:
-        expand("{outputDIR}/{bamDIR}/{{samples}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
+        expand("{outputDIR}/{bamDIR}/{{sampleMPS}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
     output:
-        temp(expand("{outputDIR}/{mpileDIR}/{{samples}}.{chr}.mpileup", outputDIR=config["outputDIR"], mpileDIR=config["mpileDIR"], chr=config["chrLIST"]))
+        expand("{outputDIR}/{mpileDIR}/{{sampleMPS}}_{{chrMPS}}.mpileup", outputDIR=config["outputDIR"], mpileDIR=config["mpileDIR"])
     params:
         bitFLAG=config["bitFLAG"],
-        mpileupARGS=config["countORPHAN"] + " " + config["noBAQ"] + " " + config["maxDEP"] + " " + config["mapQUAL"],
+        mpileupARGS=config["countORPHAN"] + " " + config["noBAQ"] + " " + config["maxDEP"] + " " + config["mapQUAL"] + " " + config["bedFILE"],
         refLOC=config["inputDIR"] + "/" + config["refDIR"] + "/" + config["refFILE"],
         logNAME="mPileSPLIT." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
     log:
         "log/" + config["mpileDIR"]
     run:
-        # Figure out how many values are in the key-value pair'd list, and use this range to assist in enumerating
-        #   through the set of chromosomes. The resultant number is also used as an index value to access the 
-        #   corresponding output file. This was important when trying to recreated the output file name with the 
-        #   chromosomal tag in the middle of the name.
-        for index in range(len(config["chrLIST"])):
-            call(config["mPileSPLIT_samtoolsProg"] + ' view -bh -F ' + str(params.bitFLAG) + ' ' + str(input) + ' ' + config["chrLIST"][index]  \ 
-            + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.' + config["chrLIST"][index] + '.view.stderr' \
-            + ' | ' + config["mPileSPLIT_samtoolsProg"] + ' mpileup ' + str(params.mpileupARGS) + ' -f ' + str(params.refLOC) + ' - > ' + str(output[index]) \
-            + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.' + config["chrLIST"][index] + '.mpileup.stderr', shell=True)
+        # Call runs a single chromosome to be processed. This rule is called for each chromosome per sample.
+        callString=config["mPileSPLIT_samtoolsProg"] + ' view -bh -F ' + str(params.bitFLAG) + ' ' + str(input) + ' ' + wildcards.chrMPS  \ 
+        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.' + wildcards.chrMPS + '.view.stderr' \
+        + ' | ' + config["mPileSPLIT_samtoolsProg"] + ' mpileup ' + str(params.mpileupARGS) + ' -f ' + str(params.refLOC) + ' - > ' + str(output) \
+        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.' + wildcards.chrMPS + '.mpileup.stderr'
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
 #-------------------------------------------------------------------------------------------------------

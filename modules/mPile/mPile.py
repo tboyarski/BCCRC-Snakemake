@@ -51,12 +51,13 @@ with open(sys.argv[1], "a+") as yamlTARGET:
     noBAQ="noBAQ: -B\n"
     maxDEP="maxDEP: -d 10000000\n"
     mapQUAL="mapQUAL: -q 20\n"
+    bedFILE='bedFILE: ""\n'
     # 2C. mPileUNSPLIT only variables
     # 2D. mPileSPLIT only variables
     # 2E. Write to file
     yamlTARGET.write("\n\n\n#################################\n# ----- " + moduleNAME + " Parameters ------ #\n#################################\n")
     yamlTARGET.write("#       -- Software --          #\n" + mPileSPLIT_samtoolsProg + mPileUNSPLIT_samtoolsProg)
-    yamlTARGET.write("#    -- Shared Variables --     #\n" + mpileDIR + bitFLAG + countORPHAN + noBAQ + maxDEP + mapQUAL)
+    yamlTARGET.write("#    -- Shared Variables --     #\n" + mpileDIR + bitFLAG + countORPHAN + noBAQ + maxDEP + mapQUAL + bedFILE)
     yamlTARGET.write("#  -- mPileUNSPLIT Specific --  #\n")
     yamlTARGET.write("#   -- mpileSPLIT Specific --   #\n")
     yamlTARGET.write("#################################\n")

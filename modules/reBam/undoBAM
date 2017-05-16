@@ -2,6 +2,7 @@
 # Author:   Tim Boyarski                                    
 # Date:	    2017-03-06                                      
 #-----------------------------------------------------------
+## Call: call("python " + snakeDIR + "/modules/reBam/reBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
 # Input:                                    .BAM            
 # Output:                                   1.fastq 2.fastq 
 # Purpose: Generate the original fastq paired-end reads     
@@ -12,14 +13,30 @@ from subprocess import call
 
 rule undoBAM:
     input: 
-        expand("{inputDIR}/{rawBamDIR}/{{samples}}.bam", inputDIR=config["inputDIR"], rawBamDIR=config["rawBamDIR"])
+        expand("{inputDIR}/{rawBamDIR}/{{sampleUB}}.bam", inputDIR=config["inputDIR"], rawBamDIR=config["rawBamDIR"])
     output:
-        expand("{outputDIR}/{fastqDIR}/{{samples}}.{readDirection}.fastq", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], readDirection=["1", "2"])
+        expand("{outputDIR}/{fastqDIR}/{{sampleUB}}.{readDirection}.fastq.gz", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], readDirection=["1", "2"])
     params:
+        picardARGS=config["picardValStringency"] + ' ' + config["picardMaxRec"],
         logNAME="undoBAM." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
     log:
         "log/" + config["reBamDIR"]
     run:
-        call(config["undoBAM_picardProg"] + ' SamToFastq I=' + str(input) + ' FASTQ=' + str(output[0]) + ' SECOND_END_FASTQ=' + str(output[1]) \
-        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr', shell=True)
+        callString = config["undoBAM_samtoolsProg"] + ' view -bF 512 ' + str(input) + ' 2> '  + str(log) + '/' + str(params.logNAME) + '.vendor_failed_reads.log' \
+        + ' | ' + config["undoBAM_samtoolsProg"] + ' sort -no -m ' + str(config["samtoolsSortMem"]) + ' - ' + str(params.logNAME) + 'namesort' + ' 2> '  + str(log) + '/' + str(params.logNAME) + '.namesort.log' \
+        + ' | ' + config["undoBAM_picardProg"] + ' SamToFastq ' + str(params.picardARGS) + ' I=/dev/stdin FASTQ=>(gzip > ' + str(output[0]) + ') SECOND_END_FASTQ=>(gzip > ' + str(output[1]) + ') '  \
+        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
 #-------------------------------------------------------------------------------------------------------
+#
+#
+#
+#    $(call LSCRIPT_PARALLEL_MEM_DRMAA,4,4G,5G,"\
+#            $(SAMTOOLS) view -bF 512 $< 2> $(LOGDIR)/$@.vendor_failed_reads.log | \
+#                    $(SAMTOOLS) sort -no -m $(SAMTOOLS_SORT_MAX_MEM) - $@.namesort 2> $(LOGDIR)/$@.samtools.namesort.log | \
+#                            $(call SAM_TO_FASTQ_MEM,10G) I=/dev/stdin FASTQ=>(gzip > $(FASTQ_DIR)/$*.1.fastq.gz) \
+#                                    SECOND_END_FASTQ=>(gzip > $(FASTQ_DIR)/$*.2.fastq.gz)")
+#
+#
+#
