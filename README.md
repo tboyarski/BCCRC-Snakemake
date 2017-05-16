@@ -1,6 +1,7 @@
 # Snakemake Pipelines Development
 This repository has been developed for the purpose of tracking the exploration of 
 biological pipelines by leveraging the build-automation software Snakemake.
+**Last Updated from Private Repository on May 16th, 2017**
 
 The language's publication can be found here:
 * https://academic.oup.com/bioinformatics/article/28/19/2520/290322/Snakemake-a-scalable-bioinformatics-workflow
