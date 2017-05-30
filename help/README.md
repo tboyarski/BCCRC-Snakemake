@@ -2,9 +2,9 @@
 A collection of the various supporting documents for this system. The files are not actually developed under 
 version control, as such, all files carry version numbers. (E.g. V6)
 
-## MS Word
-* PipelineVignette - This MS Word document provides detailed instructions on how to generate a pipeline in the LCR system on our SGE Network.
-* ModuleVignette - ***Incomplete - Revised screenshots after minor refactoring*** This MS Word document provides detailed instructions 
+## MS Word - **Incomplete** Overall system still in development
+* PipelineVignette - **Incomplete** This MS Word document provides detailed instructions on how to generate a pipeline in the LCR system on our SGE Network.
+* ModuleVignette - **Incomplete** This MS Word document provides detailed instructions 
 on how to generate a module for the LCR pipeline system our SGE Network.
 
 ## PowerPoint
