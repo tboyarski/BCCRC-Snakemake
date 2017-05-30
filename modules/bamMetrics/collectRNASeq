@@ -1,0 +1,41 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:	    2017-05-19                                      
+#-----------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/metricsBam/metricsBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .bam   
+# Output:                                   .collectRNASeq
+# Purpose: Generate a multiple metrics for a '.BAM' file. 
+# **** MISSING INTERVAL LIST TOOL! ****
+#-----------------------------------------------------------
+from time import gmtime, strftime
+import subprocess
+
+rule collectRNASeq:
+    input:
+        expand("{outputDIR}/{bamDIR}/{{samples}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
+    output:
+        expand("{outputDIR}/{metricsDIR}/{{samples}}.collectRNASeq.txt", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
+    params:
+        baseARGS=config["bamMetricsPicardValStringency"] + ' ' + config["bamMetricsPicardMexRec"],
+        refLOC=config["inputDIR"] + '/' + config["refDIR"] + '/' + config["refFILE"],
+        logNAME="collectRNASeq." + strftime("%Y-%m-%d.%H-%M-%S", gmtime())
+    log:
+        "log/" + config["bamMetricsDIR"]
+    run: 
+        # Provide read groups as an input stream
+        readGroupsCallString=config["bamMetrics_samtoolsProg"] + ' view -H ' + str(input) \
+        + ' | grep -v "@RG" | cat - ' + config["RRNAIntervalList"]
+        rgSTREAM = subprocess.Popen(readGroupsCallString, stdout=subprocess.PIPE, shell=True)
+
+        print(callString)
+        callString=config["bamMetrics_picardProg"] + ' CollectRnaSeqMetrics ' + str(params.baseARGS) \
+        + ' I=' + str(input) + ' O=' + str(output) + ' REFERENCE_SEQUENCE=' + str(params.refLOC) \
+        + ' STRAND_SPECIFICITY=' + config["StrandSpecificity"] \
+        + ' REF_FLAT=' + config["RefFlat"] \
+        + ' CHART_OUTPUT=' + str(output)[:-4] + '.pdf' \
+        + ' ROBOSOMAL_INTERVALS=' + str(rgSTREAM) \
+        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-------------------------------------------------------------------------------------------------------

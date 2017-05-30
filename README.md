@@ -13,15 +13,8 @@ Snakemake and Python modules are developed and stored here.
 Development of pipelines is to occurr here. Can used BuildPipe.py to assist in pipeline development, or
 you manually develope a pipeline and include Snakefiles from the Modules directory. 
 
-## condaENV
-Configuration files for current and previous CONDA environents are stored here.
-
-## Supporting Docs (Pipeline)
+## Help (Pipeline)
 * Presentation - This PowerPoint slideshow was presented to the Lympoid Cancer Research Department during their lab meeting on April 7th, 2017
-* PipelineVignette - This MS Word document provides detailed instructions on how to generate a pipeline in the LCR system on our SGE Network.
-* ModuleVignette - ***Incomplete - Revised screenshots after minor refactoring*** This MS Word document provides detailed instructions 
+* PipelineVignette -  **Incomplete** - This MS Word document provides detailed instructions on how to generate a pipeline in the LCR system on our SGE Network.
+* ModuleVignette - **Incomplete** - This MS Word document provides detailed instructions 
 on how to generate a module for the LCR pipeline system our SGE Network.
-
-
-## Archive
-Old files that I cannot come to terms deleting but realistically will never need again.

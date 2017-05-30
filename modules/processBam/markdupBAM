@@ -1,0 +1,47 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                        
+# Date:	    2017-05-29
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/processBam/processBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                            .BAM        
+# Output:                                           _sorted.BAM 
+# Purpose: Produce a metrics file with the marked duplicated and
+#   also marks them in the BAM file.                            
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used for system calls.
+from subprocess import call
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+rule markdupBAM:
+    input:
+        expand("{outputDIR}/{processBamDIR}/{{sampleMDB}}.bam", outputDIR=config["outputDIR"], processBamDIR=config["processBamDIR"])
+    output:
+        expand("{outputDIR}/{processBamDIR}/{{sampleMDB}}_markdup.bam", outputDIR=config["outputDIR"], processBamDIR=config["processBamDIR"]),
+        expand("{outputDIR}/{metricsDIR}/{{sampleMDB}}.dup_metrics", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
+    params:
+        compressLVL=config["compressLVL"],
+        logNAME="markdupBAM." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["processBamDIR"] + '/markdupBAM'
+    run:
+        # 1.A Base call string.
+        callString = config["processBam_bammarkduplicates2Prog"] + ' I=' + str(input) + ' O=' + str(output[0]) \
+        + ' M=' + str(output[1]) + ' ' + config["compressLVL"]
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.biobammarkdup.stderr'
+
+        # 1.C - Add short ciruiting removal of inputs to end of shell call.
+        if config["intermediateKEEP"] == False:
+            callString += ' && rm ' + str(input[0])
+
+        # 2.A - Printing system calls to a local file, and then executing them.
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

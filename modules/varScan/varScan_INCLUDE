@@ -1,59 +1,46 @@
-#-----------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 # Author:   Tim Boyarski                                    
-# Date:     2017-03-06                                      
-#-----------------------------------------------------------
+# Date:     2017-05-24
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 # Call: call("python " + snakeDIR + "/modules/varScan/varScan.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
-# Input:                                    .mpileup        
-# Output:                                   varScan.snps.vcf
-# Purpose: Generate VCF output from a MPileup file. Able to 
+# Purpose: Generate '.VCF' output from a '.mpileup' file. Able to 
 #   perform analysis on a per-chromosome basis if requested.
-#-----------------------------------------------------------
-
-
-# All modules in this workflow require the following paramters to be set.
-#       outputDIR:    ~Directory for storing all generated files
-#       mpileDIR:     ~Directory containing '.mpileup' files
-#       vcfDIR:       ~Directory for storing generated '.VCF' files
-#       minCOV:       ~Minimum read depth at a position to make a call
-#       minFREQ:      ~Minimum variant allele frequency threshold
-#       pVALUE:       ~Default p-value threshold for calling variants
-#       strandFILT:   ~Ignore variants with >90% support on one strand
-
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 ########################################################################################################
 #                                  Include all required Snakefiles.                                    #
 ########################################################################################################
+
+include: "mpileup2cns_SingleUNSPLIT"
+# mpileup2cns_SingleUNSPLIT - Generate concensus calls into a single file.
+
+include: "mpileup2copycall_PairUNSPLIT"
+# mpileup2copycall_PairUNSPLIT - Adjust for GC content and make preliminary calls on a tumor-normal copynumber file..
+
+include: "mpileup2copynum_PairUNSPLIT"
+# mpileup2copynum_SingleUNSPLIT - Determine copy number changes in a tumor-normal sample. 
+
+
+# Following refers to the nested conditionals:
+#   1) Determine if processing by chromosome or by genome.
+#   2) Determine if processing a single sample or a tumor-normal pair.
+#   3) Users may need to include 'utils' module so pipeline can to merge back to a genomic '.VCF' file.
 if config["varScanChrSplit"] == True:
     if config["sampleFORMAT"] == 'single':
-        include: "mpileup2SPLIT"
-        # 1 * mpileup2SPLIT - '.VCF' generation from '.mpileup' file.
-        # 1   minREAD:        ~Minimum supporting reads at a position to call variants
-        # 1   minQUAL:        ~Minimum base quality at a position to count a read
-        # 1   outVCF:         ~If set to 1, outputs in VCF format
-        # 1   varScanChrSplit ~Process samples by chromosome, and then merge to single '.VCF'
-        include: "mpileup2MERGE"
-        # 2 * mpileup2MERGE - '.VCF' generation from '.mpileup' file.
-    
-    if config["sampleFORMAT"] == 'pair':
-        include: "somTumorNormalSPLIT"
-        # 3 * somTumorNormalSPLIT - Tumor-normal variant caller for chromosome file.
-        # 3   minSTRAND:      ~Minimum # of strands on which variant observed
-        # 3   posVALID:       ~If set to 1, outputs all compared positions even if non-variant
-        include: "somTumorNormalMERGE"
-        # 4 * somTumorNormalMERGE - Merges '.VCF' Chromosome files
+        include: "mpileup2vcf_SingleSPLIT"
+        # mpileup2vcf_SingleSPLIT - '.VCF' generation from '.mpileup' file.
 
+    elif config["sampleFORMAT"] == 'pair':
+        include: "mpileup2vcf_PairSPLIT"
+        # mpileup2vcf_PairSPLIT - Tumor-normal variant caller for chromosome file.
 
 elif config["varScanChrSplit"] == False:
-    include: "mpileup2UNSPLIT"
-    # 5 * mpileup2indel - '.VCF' generation from '.mpileup' file.
-    # 5   minREAD:        ~Minimum supporting reads at a position to call variants
-    # 5   minQUAL:        ~Minimum base quality at a position to count a read
-    # 5   outVCF:         ~If set to 1, outputs in VCF format
-    # 5   varScanChrSplit ~Process samples by chromosome, and then merge to single '.VCF'
+    if config["sampleFORMAT"] == 'single':
+        include: "mpileup2vcf_SingleUNSPLIT"
+        #  mpileup2vcf_SingleUNSPLIT - '.VCF' generation from '.mpileup' file.
 
+    elif config["sampleFORMAT"] == 'pair':
+        include: "mpileup2vcf_PairUNSPLIT"
+        #  mpileup2vcf_PairUNSPLIT - Tumor-normal variant caller for genomic file.
 
-    include: "somTumorNormalUNSPLIT"
-    # 6 * somTumorNormalUNSPLIT - Tumor-normal variant caller for genomic file.
-    # 6   minSTRAND:      ~Minimum # of strands on which variant observed
-    # 6   posVALID:       ~If set to 1, outputs all compared positions even if non-variant
 ########################################################################################################

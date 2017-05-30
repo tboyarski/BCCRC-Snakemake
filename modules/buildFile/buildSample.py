@@ -99,12 +99,12 @@ def buildSample(format, sampleFILE, yamlFILE):
 
     # Include the sample file as a YAML Parameter, for when using PANDAS on coordinating paired reads.
     sampleLOC="sampleFILE: " + sampleFILE + "\n"
-    sampleFORMAT="sampleFORMAT: " + format
+    sampleFORMAT="sampleFORMAT: " + format + "\n"
     # Write the parsed result to the user's third argument.
     with open(yamlFILE, "r+") as yamlTARGET:
         # Seek to end of file.
         yamlTARGET.seek(0,2)
         # Write it to file
-        yamlTARGET.write("#         -- Sample --          #\n" + userSamples + sampleLOC + sampleFORMAT + "\n")
+        yamlTARGET.write("#         -- Sample --          #\n" + userSamples + sampleLOC + sampleFORMAT)
         yamlTARGET.write("#################################\n")
 #-------------------------------------------------------------------------------

@@ -1,0 +1,38 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:	    2017-05-26                                      
+#-----------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/annontateVcf/annoateVcf.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .vcf   
+# Output:                                   .canonical.vcf   
+# Purpose: Annotate a '.VCF' file via canonical form.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+from time import gmtime, strftime
+from subprocess import call
+
+rule canonical:
+    input:
+        expand("{outputDIR}/{varScanDIR}/{{sampleCAN}}.vcf", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"])
+    output:
+        expand("{outputDIR}/{annotateVcfDIR}/{{sampleCAN}}.canonical_annotated.vcf", outputDIR=config["outputDIR"], annotateVcfDIR=config["annotateVcfDIR"])
+    params:
+        logNAME="canonical." + strftime("%Y-%m-%d.%H-%M-%S", gmtime()),
+        baseARGS=config["annotateVerbose"]+' '+config["snpEffConfig"]+' '+config["snpEffFormat"]+' '+config["snpEffHGVS"] \
+            +' '+config["snpEffDownstream"]+' '+config["snpEffIntergenic"]+' '+config["snpEffUpstream"]+' '+config["snpEffgatk"]
+    log:
+        "log/" + config["annotateVcfDIR"] + '/canonical/'
+    run: 
+        # 1.A - Base call string.
+        callString=config["annotateVcf_javaProg"] + ' ' + config["annotateVcf_snpEffProg"] \
+        + ' eff ' + str(params.baseARGS) + ' -canon ' + config["snpEffGenomeVersion"] \
+        + ' -s ' + config["outputDIR"] + '/' + config["annotateVcfDIR"] + '/' + str(params.logNAME) + '.summary.html' \ 
+        + ' ' + str(input) + ' > ' + str(output)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

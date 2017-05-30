@@ -1,0 +1,30 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:	    2017-05-19                                      
+#-----------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/metricsBam/metricsBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .bam   
+# Output:                                   .collectWGS   
+# Purpose: Generate a multiple metrics for a '.BAM' file. 
+#-----------------------------------------------------------
+from time import gmtime, strftime
+from subprocess import call
+
+rule collectWGS:
+    input:
+        expand("{outputDIR}/{bamDIR}/{{samples}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
+    output:
+        expand("{outputDIR}/{metricsDIR}/{{samples}}.collectWGS", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
+    params:
+        baseARGS=config["bamMetricsPicardValStringency"] + ' ' + config["bamMetricsPicardMexRec"],
+        refLOC=config["refDIR"] + '/' + config["refFILE"],
+        logNAME="collectWGS." + strftime("%Y-%m-%d.%H-%M-%S", gmtime())
+    log:
+        "log/" + config["bamMetricsDIR"]
+    run: 
+        callString=config["bamMetrics_picardProg"] + ' CollectWgsMetrics ' + str(params.baseARGS) \
+        + ' I=' + str(input) + ' O=' + str(output) + ' REFSERENCE_SEQUENCE=' + str(params.refLOC) \
+        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-------------------------------------------------------------------------------------------------------

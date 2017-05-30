@@ -1,0 +1,33 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:     2017-05-24
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + ROOT_PATH + "/modules/varScan/varScan.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .varScan.copynumber  
+# Output:                                   .varScan.copycall
+# Purpose: Infer somatic copy number changes using data from matched tumor-normal pairs.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+from time import localtime, strftime
+from subprocess import call
+
+rule mpileup2copycall_PairUNSPLIT:
+    input:
+        expand("{outputDIR}/{varScanDIR}/{{sampletMPU2CC}}_{{samplenMPU2CC}}.varScan.copynumber", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"])
+    output:
+        expand("{outputDIR}/{varScanDIR}/{{sampletMPU2CC}}_{{samplenMPU2CC}}.varScan.copycall", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"])
+    params:
+        logNAME="mpileup2copycall_PairUNSPLIT." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["varScanDIR"] + "/mpileup2copycall_PairUNSPLIT/"
+    run:
+        # 1.A - Base call string.
+        callString=config["varScan_varScanProg"] + ' copyCaller ' + str(input) + ' --output-file ' + str(output)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
+
+         # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

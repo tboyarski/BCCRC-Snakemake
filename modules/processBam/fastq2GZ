@@ -1,0 +1,43 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-05-29
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/processBam/processBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                            .fastq      
+# Output:                                           .fastq.gz   
+# Purpose: Compress a '.fastq' file into a '.fastq.gz' file.    
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used for system calls.
+from subprocess import call
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+rule fastq2GZ:
+    input:
+        expand("{outputDIR}/{fastqDIR}/{{sampleFGZ}}.fastq", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"])
+    output:
+        expand("{outputDIR}/{fastqDIR}/{{sampleFGZ}}.fastq.gz", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"])
+    params:
+        logNAME="fastq2GZ." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["processBamDIR"] + '/fastq2GZ'
+    run:
+        # 1.A - Basecall string.
+        callString='gzip -c ' + str(input) + ' > ' + str(output)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
+
+        # 1.C - Add short ciruiting removal of inputs to end of shell call.
+        if config["intermediateKEEP"] == False:
+            callString += ' && rm ' + str(input[0])
+
+        # 2.A - Printing system calls to a local file, and then executing them.
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

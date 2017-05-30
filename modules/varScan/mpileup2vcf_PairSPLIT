@@ -1,0 +1,44 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-05-24                                      
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + ROOT_PATH + "/modules/varScan/varScan.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    T.chr#.mpileup        
+#                                           N.chr#.mpileup
+# Output:                                   T_N.chr#.snp.vcf   
+#                                           T_N.chr#.indel.vcf 
+# Purpose: Generate '.VCF' output from a '.mpileup' file. Performs
+#   analysis on a per-chromosome basis.                     
+#                                                           
+#   **Note** Varscan somatic must produce both snp and      
+#       indel file, no calls exist to get only one or other.
+#       Vartype will always equal ['snp', 'indel'].
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+from time import localtime, strftime
+from subprocess import call
+
+rule mpileup2vcf_PairSPLIT:
+    input:
+        expand("{outputDIR}/{mpileupDIR}/{{samplenMPU2VCFPS}}_{{chrMPU2VCFPS}}.mpileup", outputDIR=config["outputDIR"], mpileupDIR=config["mpileupDIR"]),
+        expand("{outputDIR}/{mpileupDIR}/{{sampletMPU2VCFPS}}_{{chrMPU2VCFPS}}.mpileup", outputDIR=config["outputDIR"], mpileupDIR=config["mpileupDIR"])
+    output:
+        expand("{outputDIR}/{varScanSplitDIR}/{{sampletMPU2VCFPS}}_{{samplenMPU2VCFPS}}_{{chrMPU2VCFPS}}.varScan.{varTypeMPU2VCFPS}.vcf", outputDIR=config["outputDIR"], varScanSplitDIR=config["varScanSplitDIR"], varTypeMPU2VCFPS=config["varType"])
+    params:
+        baseArgs=config["minCOV"]+" "+config["minREAD"]+" "+config["minQUAL"]+" "+config["minFREQ"]+" "+config["pVALUE"]+" "+config["strandFILT"]+" "+config["outVCF"]+" "+config["minSTRAND"]+" "+config["posVALID"],
+        logNAME="mpileup2vcf_PairSPLIT." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["varScanSplitDIR"] + "/mpileup2vcf_PairSPLIT/"
+    run:
+        # 1.A - Base call string.
+        callString=config["varScan_varScanProg"] + ' somatic ' + str(input) \
+        + ' ' + config["outputDIR"] + '/' + config["varScanSplitDIR"] + '/' + str(params.logNAME) + wildcards.chrMPU2VCFPS \
+        + ' --output-snp ' + str(output[0]) + ' --output-indel ' + str(output[1]) + ' ' + str(params.baseArgs)
+		
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
+        	
+       	# 2.A -  Printing system calls to a local file, and then executing them. 
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

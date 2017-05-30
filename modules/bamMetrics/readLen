@@ -1,0 +1,29 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:	    2017-05-19                                      
+#-----------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/metricsBam/metricsBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .bam   
+# Output:                                   .readLen   
+# Purpose: Generate metrics on the read length of aligned
+#   '.BAM' files.
+#-----------------------------------------------------------
+from time import gmtime, strftime
+from subprocess import call
+
+rule readLen:
+    input:
+        expand("{outputDIR}/{bamDIR}/{{samples}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
+    output:
+        expand("{outputDIR}/{metricsDIR}/{{samples}}.readLen", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
+    params:
+        logNAME="readLen." + strftime("%Y-%m-%d.%H-%M-%S", gmtime())
+    log:
+        "log/" + config["bamMetricsDIR"]
+    run: 
+        callString=config["bamMetrics_samtoolsProg"] + ' view ' + str(input) \
+        + " | awk '{print length(\$$10) }' | sort -n | uniq -c | sort -rn " \
+        + " | sed 's/^ \+//' > " + str(output)
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-------------------------------------------------------------------------------------------------------
