@@ -3,12 +3,13 @@ This directory contains the varScan module. It is a single-module system.
 
 ## Modules:
 See invidual files for expanded explanations of their purpose and the manner in which they accomplish it.
-* mpileup2UNSPLIT: Generate single '.VCF' file from single '.mpileup' file.
-* mpileup2SPLIT: Generate single chromosomal '.VCF' files from single chromosomal '.mpileup' files.
-* mpileup2MERGE: Merge chromosomal '.VCF' files into a genomic '.VCF' file.
-* somTumorNormalUNSPLIT: Generate single '.VCF' file from a pair of tumor-normal '.mpileup' file.
-* somTumorNormalSPLIT: Generate single chromosomal '.VCF' files from a pair of tumor-normal chromosomal '.mpileup' files.
-* somTumorNormalMERGE: Merge tumor-normal chromosomal '.VCF' files into a genomic '.VCF' file.
+* mpileup2vcf_SingleUNSPLIT: Generate single '.VCF' file from single '.mpileup' file.
+* mpileup2vcf_SingleSPLIT: Generate single chromosomal '.VCF' files from single chromosomal '.mpileup' files.
+* mpileup2vcf_PairUNSPLIT: Generate single '.VCF' file from a pair of tumor-normal '.mpileup' file.
+* mpileup2vcf_SingleSPLIT: Generate single chromosomal '.VCF' files from a pair of tumor-normal chromosomal '.mpileup' files.
+* mpileup2copycall_PairUNSPLIT: Infer somatic copy number changes using data from matched tumor-normal pairs.
+* mpileup2copynum_PairUNSPLIT: Call variants and identify their somatic status
+* mpileup2cns_SingleUNSPLIT: Generate concensus calls from a '.mpileup' file.
 * **varScan_INCLUDE: Generate '.VCF' file from a '.mpileup' file.**
 
 ## Logging:
@@ -24,9 +25,9 @@ mpileup2MERGE, somTumorNormalMERGE | chrLIST | ['chr1', ... 'chrY'] OR ['1', ...
 ## Module Specific Paramters:
 Module |Argument | Default Value | Description
 :--------: | :--------: | :--------: | :--------
-mpileup2SPLIT, mpileup2UNSPLIT | mpileup2_varScanProg | varscan | Version of varScan to be used.
-somTumorNormalSPLIT, somTumorNormalUNSPLLIT | somTumorNormal_varScanProg | varscan | Version of varScan to be used.
-*SPLIT, *UNSPLIT | mpileDIR | mPile | Directory provides '.pileup' files to be processed.
+mpileup2vcf_SingleSPLIT, mpileup2vcf_PairUNSPLIT | varScan_varScanProg | varscan | Version of varScan to be used.
+mpileup2vcf_PairSPLIT, ,mpileup2vcf_PairUNSPLIT | varScan_varScanProg | varscan | Version of varScan to be used.
+*SPLIT, *UNSPLIT | mpileupDIR | mpileup | Directory provides '.pileup' files to be processed.
 *SPLIT, *UNSPLIT, *MERGE | varScanSplitDIR | varScanSplit | Directory to store chromosomal '.VCF' file prior to their merge.
 *MERGE | varScanDIR | varScan | Log directory and core directory to store files.
 *SPLIT, *UNSPLIT | minCOV | --min-coverage 20 | Minimum read depth at a position to make a call.
@@ -37,9 +38,9 @@ somTumorNormalSPLIT, somTumorNormalUNSPLLIT | somTumorNormal_varScanProg | varsc
 *SPLIT, *UNSPLIT | strandFILT | --strand-filter 0 | Ignore variants with >90% support on one strand.
 *SPLIT, *UNSPLIT | outVCF | --output-vcf 1 | If set to 1, outputs in VCF format.
 *SPLIT | varScanChrSplit | True | Process samples by chromosome, and then merge to single '.VCF'.
-somTumorNormalSPLIT, somTumorNormalUNSPLIT | minSTRAND | --min-strands2 0 | Minimum number of strands on which variant observed.
-somTumorNormalSPLIT, somTumorNormalUNSPLIT | posVALID | --validation 1 | If set to 1, outputs all compared positions even if non-variant.
-
+mpileup2vcf_PairSPLIT, ,mpileup2vcf_PairUNSPLIT | minSTRAND | --min-strands2 0 | Minimum number of strands on which variant observed.
+mpileup2vcf_PairSPLIT, ,mpileup2vcf_PairUNSPLIT | posVALID | --validation 1 | If set to 1, outputs all compared positions even if non-variant.
+mpileup2copynum_PairUNSPLIT | mapQSkip | -q 1 | Skip alignments with mapQ smaller than the INT.
 
 ## WARNINGS:
 ```
@@ -55,9 +56,6 @@ generating two separate files and providing them together.
 Concerns may exist for moments disk usage overhead, by not piping the output directly this increases the footprint
 of the Snakerun. However, it also drastically reduces the memory footprint as an entire chromosome or sample is no
 longer needed to be stored in memory.
-
-
-
 
 varScank.mk did not use the '-bh -F 512' flag when calculating indels for single samples, or when calcualting any tumor-normal pairs.
 The snakemake equivalents all use the same code, so they all will use the '-bh -F 512' flags.
