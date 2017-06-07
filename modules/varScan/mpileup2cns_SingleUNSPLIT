@@ -1,0 +1,44 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-05-24                                      
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + ROOT_PATH + "/modules/varScan/varScan.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .mpileup
+# Output:                                   .varScan.mpileup2cns
+# Purpose: Generate concensus calls from a '.mpileup' file
+#
+#   *** NOTE *** Input files are always kept. No way via this 
+#       script to automate their destruction. This was done to
+#       avoid the risk of deleting the '.mpileup' files as they
+#       cannot be regenerated from this output.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used for system calls.
+from subprocess import call
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+rule mpileup2cns_SingleUNSPLIT:
+    input:
+        expand("{outputDIR}/{mpileupDIR}/{{sampleMPU2CNS}}.mpileup", outputDIR=config["outputDIR"], mpileupDIR=config["mpileupDIR"])
+    output:
+        expand("{outputDIR}/{varScanDIR}/{{sampleMPU2CNS}}.varScan.mpileup2cns", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"])
+    params:
+        logNAME="mpileup2cns_SingleUNSPLIT." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["varScanDIR"] + "/mpileup2cns_SingleUNSPLIT/"
+    run:
+        # 1.A - Base call string.
+        callString=config["varScan_varScanProg"] + " mpileup2cns " + str(input) + " > " + str(output)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,51 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-05-29
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/processBam/processBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                            .BAM        
+# Output:                                           _sorted.BAM 
+# Purpose: Produce a name sorted '.BAM' file using biobambam.   
+#   **NOTE** This module has been copied but not validated.     
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Used for system calls.
+import subprocess
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+rule namesortBAM:
+    input:
+        "{pathNSB}/{sampleNSB}.bam"
+    output:
+        "{pathNSB}/{sampleNSB}_namesort.bam"
+    params:
+        logNAME="namesortBAM." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["processBamDIR"] + '/namesortBAM'
+    run:
+        # 1.A Base call string.
+        callString=config["processBam_samtoolsProg"] + ' view -b ' + str(input)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.samtools.stderr'
+
+        # 1.C - Piping input into primary processing software.
+        callString += ' | ' + config["processBam_bamsortProg"] + ' SO=queryname > ' + str(output)
+
+        # 1.D - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.bamsort.stderr'
+
+        # 1.E - Add short ciruiting removal of inputs to end of shell call.
+        if config["intermediateKEEP"] == False:
+            callString += ' && rm ' + str(input)
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-------------------------------------------------------------------------------------------------------

@@ -1,0 +1,53 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:	    2017-05-16                                      
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/utils/utils.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .vcf   
+# Output:                                   .sorted.vcf   
+# Purpose: Sort a '.VCF' file.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+from time import gmtime, strftime
+from subprocess import call
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+def sortTable(input, output, picardARGS, logNAME):
+    # 1.A - Base call string.
+    callString=config["utils_picardProg"] + ' SortVcf ' + str(picardARGS)  \
+    + ' I= ' + str(input) + ' O=' + str(output) + ' SEQUENCE_DICTIONARY=' + config["vcfSORTSeqDict"]
+
+    # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+    if config["offCluster"]:
+        callString += ' 2> ' + str(log) + '/' + str(logNAME) + '.stderr'
+
+    # 2.A - Printing system calls to a local file, and then executing them.
+    call('echo "' + str(logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+    call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Enable sorting a '.VCF' inside the varScan directory.
+rule vcfSORT_varScanDIR:
+    input:
+        expand("{outputDIR}/{varScanDIR}/{{sampleVCFS}}.varScan.{{varTypeVCFS}}.vcf", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"])
+    output:
+        expand("{outputDIR}/{varScanDIR}/{{sampleVCFS}}.sorted.varScan.{{varTypeVCFS}}.vcf", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"])
+    params:
+        picardARGS=config["vcfSORTValStringency"] + ' ' + config["vcfSORTMaxRec"],
+        logNAME="vcfSORT.varScanDIR" + strftime("%Y-%m-%d.%H-%M-%S", gmtime())
+    log:
+        log= "log/" + config["utilsDIR"]
+    run: 
+        sortTable(input, output, params.picardARGS, params.logNAME)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Enable sorting a '.VCF' inside the annotateVcf directory.
+#rule vcfSORT_annotateVcfDIR:
+#    input:
+#        expand("{outputDIR}/{varScanDIR}/{{sampleVCFS}}.varScan.{{varTypeVCFS}}.vcf", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"])
+#    output:
+#        expand("{outputDIR}/{annotateVcfDIR}/{{sampleVCFS}}.sorted.varScan.{{varTypeVCFS}}.vcf", outputDIR=config["outputDIR"], annotateVcfDIR=config["annotateVcfDIR"])
+#    params:
+#        picardARGS=config["vcfSORTValStringency"] + ' ' + config["vcfSORTMaxRec"],
+#        logNAME="vcfSORT.annotateVcfDIR" + strftime("%Y-%m-%d.%H-%M-%S", gmtime())
+#    log:
+#        log= "log/" + config["utilsDIR"]
+#    run: 
+#        sortTable(input, output, params.picardARGS, params.logNAME)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

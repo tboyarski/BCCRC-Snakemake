@@ -1,0 +1,23 @@
+# Author: Tim
+# Date: May 23, 2017
+# Purpose: May 23th meeting sample file. Provide pathing and summarized results.
+
+    source activate /home/tboyarski/share/usr/anaconda/4.3.0/envs/CentOS5-Compatible
+
+# 1. Running the tumor-normal pair (Pfeiffer1T, Pfeiffer1N; 'sampleFILEpair.txt'):
+#   ~ Things to change and *why*:
+#       -Change BAM annotation to remove duplicates instead of marking them
+#           *BAM processing
+#       -Change varScan minimum coverage from 20 to 25.
+#           *varScan Parameters
+#       -Change varScan chromosome split processing flag from True to False.
+#           *Whome genome vs Chromosome processing
+#       -Change VCF output file from canonical to noncanonical annotation.
+#           *VCF Annotation
+#       -Change the JAVA version used by varScan.
+#           *software version absolute paths
+#       -Change from the default of using biobambam to sort the bam file to using samtools
+#           *software choice flags
+#
+#
+# 2. Do it using the same configurations, but run single samples (Pfeiffer2, Pfeiffer3; 'sampleFILEsingle.txt')
