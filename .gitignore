@@ -3,17 +3,8 @@
 .DS_Store
 .DS_Store?
 *.swp
-*.bam
-*.bam.bai
-*.fa.*
-*.fa
 SampleSingleLines.txt
-ref/
-ref
-bam/
-fastq/
 vcf/
-output/mpileup/
 OLD/
 log/
 muTect/

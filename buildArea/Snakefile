@@ -1,10 +1,13 @@
 #---------------------
 # Author: tboyarski
-# Date: 2017-04-28.20-29-37
+# Date: 2017-06-07.10-42-31
 #---------------------
-# Call using: snakemake --jobs 10 --cluster-config input/config.json --drmaa "{cluster.clusterSpec}"
+# Call using: snakemake --jobs 10 --cluster-config input/config.json --jobname "{cluster.jobName}{jobid}" --drmaa "{cluster.clusterSpec}"
 
+
+import io
 import pandas
+
 # Global config:
 configfile: "input/config.yaml"
 
@@ -12,94 +15,135 @@ configfile: "input/config.yaml"
 rule all:
     input:
         # Pair: Tumor-Normal Runs
-        #expand("{outputDIR}/{annotateDIR}/{index[1][tumor]}_{index[1][normal]}.varScan.{varType}.canonical_annotated{annotationSUFFIX}.vcf", outputDIR=config["outputDIR"], annotateDIR=config["annotateDIR"], index=pandas.read_table(config["sampleFILE"], " ").iterrows(), varType=config["varType"], annotationSUFFIX=config["annotationSUFFIX"])
-        #expand("{outputDIR}/{getVarTableDIR}/{index[1][tumor]}_{index[1][normal]}.varScan.{varType}.canonical_annotated{annotationSUFFIX}.txt", outputDIR=config["outputDIR"], getVarTableDIR=config["getVarTableDIR"], index=pandas.read_table(config["sampleFILE"], " ").iterrows(), varType=config["varType"], annotationSUFFIX=config["annotationSUFFIX"])
+        #expand("{outputDIR}/{annotateVcfDIR}/{sample[1][tumor]}_{sample[1][normal]}.varScan.{form[1][varType]}{form[1][annotated]}.vcf", outputDIR=config["outputDIR"], annotateVcfDIR=config["annotateVcfDIR"], sample=pandas.read_table(config["sampleFILE"], " ").iterrows(), form=pandas.read_table(io.StringIO(config["sampleFORM"]), " ").iterrows())
+        #expand("{outputDIR}/{utilsDIR}/{sample[1][tumor]}_{sample[1][normal]}.varScan.{form[1][varType]}{form[1][annotated]}.txt", outputDIR=config["outputDIR"], utilsDIR=config["utilsDIR"], sample=pandas.read_table(config["sampleFILE"], " ").iterrows(), form=pandas.read_table(io.StringIO(config["sampleFORM"]), " ").iterrows())
+        #expand("{outputDIR}/{utilsDIR}/all.samples.varScan.{form[1][varType]}{form[1][annotated]}.txt", outputDIR=config["outputDIR"], utilsDIR=config["utilsDIR"], form=pandas.read_table(io.StringIO(config["sampleFORM"]), " ").iterrows())
         # Single: Normal Runs
-        #expand("{outputDIR}/{annotateDIR}/{samples}.varScan.{varType}.canonical_annotated{annotationSUFFIX}.vcf", outputDIR=config["outputDIR"], annotateDIR=config["annotateDIR"], samples=config["sample"], varType=config["varType"], annotationSUFFIX=config["annotationSUFFIX"])
-        #expand("{outputDIR}/{varScanDIR}/{samples}.varScan.{varType}.vcf", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"], samples=config["sample"], varType=config["varType"])
-        expand("{outputDIR}/{getVarTableDIR}/{samples}.varScan.{varType}.canonical_annotated{annotationSUFFIX}.txt", outputDIR=config["outputDIR"], getVarTableDIR=config["getVarTableDIR"], samples=config["sample"], varType=config["varType"], annotationSUFFIX=config["annotationSUFFIX"])
-        #expand("{outputDIR}/{reBamDIR}/{samples}{fileTAG}.bam.bai", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"], fileTAG=config["fileTAG"])
-        #expand("{outputDIR}/{reBamDIR}/{samples}_realigned.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"])
-        #expand("{outputDIR}/{fastqDIR}/{samples}.{version}.fastq.gz", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], samples=config["sample"], version=["1", "2"])
+        #expand("{outputDIR}/{processBamDIR}/{samples}{fileTAG}.bam.bai", outputDIR=config["outputDIR"], processBamDIR=config["processBamDIR"], samples=config["sample"], fileTAG=config["fileTAG"])
+        #expand("{outputDIR}/{annotateVcfDIR}/{samples}.varScan.{form[1][varType]}{form[1][annotated]}.vcf", outputDIR=config["outputDIR"], annotateVcfDIR=config["annotateVcfDIR"], samples=config["sample"], form=pandas.read_table(io.StringIO(config["sampleFORM"]), " ").iterrows())
+        #expand("{outputDIR}/{utilsDIR}/{samples}.varScan.{form[1][varType]}{form[1][annotated]}.txt", outputDIR=config["outputDIR"], utilsDIR=config["utilsDIR"], samples=config["sample"], form=pandas.read_table(io.StringIO(config["sampleFORM"]), " ").iterrows())
+        expand("{outputDIR}/{utilsDIR}/all.samples.varScan.{form[1][varType]}{form[1][annotated]}.txt", outputDIR=config["outputDIR"], utilsDIR=config["utilsDIR"], samples=config["sample"], form=pandas.read_table(io.StringIO(config["sampleFORM"]), " ").iterrows())
 
-#**** reBam ****:
+
+#***** utils *****
 #  Included:
-#    undoBAM:    Fastq generation from a BAM file
-#    alignBAM:   BAM generation from a Fastq file
-#    sortBAM:    Sorting of the BAM file
-#    indexBAM:   Indexing of a BAM file
-#    filteredBAM:Filtering of a BAM file on read quality
-#    rmdupBAM:   Remove dupliates in a BAM file
+#      sam2BAM:                    SAM generation from a '.BAM' file.
+#      tableMERGE_ADAPTOR:         Merge variant tables.
+#      vcfGetTable_ADAPTOR:        Produce a variant table from a '.VCF' file.
+#      vcfMERGE_ADAPTOR:           Merge chromosomal '.VCF' files into a single genomic '.VCF' file.
+#      vcfSORT_ADAPTOR:            Sort a '.VCF' file based on sequence provided.
 #  Files:
-#    input:      X.BAM
-#    output:     X_realigned_sorted.BAM.
-#                X_realigned_sorted.BAM.BAI
-#include: "/home/tboyarski/share/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake/modules/reBam/reBam_INCLUDE"
-#  Required: NONE
-#  Call via:
-#  expand("{outputDIR}/{fastqDIR}/{samples}.{version}.fastq", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], samples=config["sample"], version=["1", "2"])                 #undoBAM
-#  expand("{outputDIR}/{reBamDIR}/{samples}_realigned.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"])                                       #alignBAM
-#  expand("{outputDIR}/{reBamDIR}/{samples}_sorted.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"])                                          #sortBAM
-#  expand("{outputDIR}/{reBamDIR}/{samples}.bam.bai", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"])                                             #indexBAM
-#  expand("{outputDIR}/{reBamDIR}/{samples}{fileTAG}.bam.bai", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"], fileTAG=config["fileTAG"])         #indexBAM
-#  expand("{outputDIR}/{reBamDIR}/{samples}_realigned_sorted.bam.bai", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"], fileTAG=config["fileTAG"]) #indexBAM
-#  expand("{outputDIR}/{reBamDIR}/{samples}_filtered.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"])                                        #filteredBAM
-#  expand("{outputDIR}/{reBamDIR}/{samples}_rmdup.bam", outputDIR=config["outputDIR"], reBamDIR=config["reBamDIR"], samples=config["sample"])                                           #rmdupBAM
+#    Input:      **Various**f
+#    Output:     **Various**
+include: "/Users/tboyarski/Desktop/Tim/BCCRC-Snakemake/modules/utils/utils_INCLUDE"
+#  Required: vcfProgram to be set in YAML by program producing '.vcf'
+#  Call via: 
+#sam2BAM               ~ expand("{outputDIR}/{samDIR}/{samples}.bam", outputDIR=config["outputDIR"], samDIR=config["samDIR"], samples=config["sample"])
+#tableMERGE_ADAPTOR    ~ expand("{outputDIR}/{utilsDIR}/all.samples.{vcfProgram}.{form[1][varType]}{form[1][annotated]}.txt", outputDIR=config["outputDIR"], utilsDIR=config["utilsDIR"], samples=config["sample"], vcfProgram=config["vcfProgram"], form=pandas.read_table(io.StringIO(config["sampleFORM"]), " ").iterrows())
+#vcfGetTable_ADAPTOR   ~ expand("{outputDIR}/{utilsDIR}/{samples}.{vcfProgram}.{form[1][varType]}{form[1][annotated]}.txt", outputDIR=config["outputDIR"], utilsDIR=config["utilsDIR"], samples=config["sample"], vcfProgram=config["vcfProgram"], form=pandas.read_table(io.StringIO(config["sampleFORM"]), " ").iterrows())
+#vcfMERGE_ADAPTOR      ~ expand("{outputDIR}/{varScanDIR}/{samples}.{vcfProgram}.{varType}.vcf", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"], samples=config["sample"], vcfProgram=config["vcfProgram"], varType=config["varType"])
+#vcfSORT_ADAPTOR       ~ expand("{outputDIR}/{varScanDIR}/{samples}.sorted.{vcfProgram}.{varType}.vcf", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"], samples=config["sample"], vcfProgram=config["vcfProgram"], varType=config["varType"])
 
 
-#***** mPile *****
+#***** annotateVcf *****
 #  Included:
-#    mPileUNSPLIT:     Generated mpileup file from BAM file.
-#    mPileSPLIT:     Generated mpileup file from BAM file.
+#    canonical: Canonical annotation of a '.VCF' file.
+#    cosmic: Cosmic annotation of a '.VCF' file.
+#    dbsnp: DbSnp annotation of a '.VCF' file.
+#    indel: Indel annotation of a '.VCF' file.
+#    noncanonical: Noncanonical annotation of a '.VCF' file.
 #  Files:
-#    Input:      .BAM
-#    Output:     .mpileup
-include: "/home/tboyarski/share/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake/modules/mPile/mPile_INCLUDE"
+#    Input:      .vcf
+#    Output:     .annotate.vcf
+include: "/Users/tboyarski/Desktop/Tim/BCCRC-Snakemake/modules/annotateVcf/annotateVcf_INCLUDE"
 #  Required: NONE
 #  Call via: 
-#    expand("{outputDIR}/{mpileDIR}/{samples}.mpileup", outputDIR=config["outputDIR"], mpileDIR=config["mpileDIR"], samples=config["sample"])
+#    expand("{outputDIR}/{annotateVcfDIR}/{samples}.canonical_annotated.vcf", outputDIR=config["outputDIR"], annotateVcfDIR=config["annotateVcfDIR"], samples=config["sample"])
+#    expand("{outputDIR}/{annotateVcfDIR}/{samples}.cosmic_annotated.vcf", outputDIR=config["outputDIR"], annotateVcfDIR=config["annotateVcfDIR"], samples=config["sample"])
+#    expand("{outputDIR}/{annotateVcfDIR}/{samples}.dbsnp_annotated.vcf", outputDIR=config["outputDIR"], annotateVcfDIR=config["annotateVcfDIR"], samples=config["sample"])
+#    expand("{outputDIR}/{annotateVcfDIR}/{samples}.indel_annotated.vcf", outputDIR=config["outputDIR"], annotateVcfDIR=config["annotateVcfDIR"], samples=config["sample"])
+#    expand("{outputDIR}/{annotateVcfDIR}/{samples}.noncanonical_annotated.vcf", outputDIR=config["outputDIR"], annotateVcfDIR=config["annotateVcfDIR"], samples=config["sample"])
 
 
 #***** varScan *****
 #  Included:
-#    mpileup2snp:    Generate VCF output of SNPs from a mPileUp file.
-#    mpileup2indel:    Generate VCF output of INDELs from a mPileUp file.
-#    somTumorNormalUNSPLIT:    Generate VCF output for tumor-normal pairs.
-#    somTumorNormalSPLIT:    Genereate VCF output for tumor-normal pairs, process chromosomes in parallel.
-#    somTumorNormalMERGE:    Combine single chromosome VCF tumor-normal pairs output into single file.
+#    mpileup2cns_SingleUNSPLIT:    Generate concensus calls from a '.mpileup' file.
+#    mpileup2copycall_PairUNSPLIT: Infer somatic copy number changes using data from matched tumor-normal pairs.
+#    mpileup2copynum_PairUNSPLIT:  Call variants and identify their somatic status.
+#    mpileup2vcf_PairSPLIT:        Generate '.VCF' output of SNPs from a chromosomal tumor-normal '.mpileup' file.
+#    mpileup2vcf_PairUNSPLIT:      Generate '.VCF' output of SNPs from a genomic tumor-normal '.mpileup' file.
+#    mpileup2vcf_SingleSPLIT:      Generate '.VCF' output of SNPs from a chromosomeal sample '.mpileup' file.
+#    mpileup2vcf_SingleUNSPLIT:    Generate '.VCF' output of SNPs from a genomic sample '.mpileup' file.
 #  Files:
 #    input:      X.mpileup
 #    output:     X.varScan.snps.vcf
 #                X.varScan.indels.vcf
-include: "/home/tboyarski/share/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake/modules/varScan/varScan_INCLUDE"
+include: "/Users/tboyarski/Desktop/Tim/BCCRC-Snakemake/modules/varScan/varScan_INCLUDE"
 #  Required:
-#    >mPile:      Generate a MPileUp file from a BAM file.
-#    @include: "/home/tboyarski/share/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake/modules/mPile/mPile_INCLUDE"
+#    >mpileup:      Generate a '.mpileup' file from a '.BAM' file.
+#    @include: "/Users/tboyarski/Desktop/Tim/BCCRC-Snakemake/modules/mileup/mileup_INCLUDE"
+#  Call Pair (Tumor-Normal) Runs Via:
+#VcfSplit   ~ expand("{outputDIR}/{varScanSplitDIR}/{sample[1][tumor]}_{sample[1][normal]}_{chrLIST}.varScan.{varType}.vcf", outputDIR=config["outputDIR"], varScanSplitDIR=config["varScanSplitDIR"], sample=pandas.read_table(config["sampleFILE"], " ").iterrows(), chrLIST=config["chrLIST"], varType=config["varType"])
+#VcfUnsplit ~ expand("{outputDIR}/{varScanDIR}/{sample[1][tumor]}_{sample[1][normal]}.varScan.{varType}.vcf", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"], sample=pandas.read_table(config["sampleFILE"], " ").iterrows(), varType=config["varType"])
+#  Annotated Pair Runs (Requiring modules/utils) Via:
+#VCFs ~ expand("{outputDIR}/{varScanDIR}/{sample[1][tumor]}_{sample[1][normal]}.varScan.{form[1][varType]}{form[1][annotated]}.vcf", outputDIR=config["outputDIR"],varScanDIR=config["varScanDIR"], sample=pandas.read_table(config["sampleFILE"], " ").iterrows(), form=pandas.read_table(io.StringIO(config["sampleFORM"]), " ").iterrows())
+#TXTs ~ expand("{outputDIR}/{varTablesDIR}/{sample[1][tumor]}_{sample[1][normal]}.varScan.{form[1][varType]}{form[1][annotated]}.txt", outputDIR=config["outputDIR"], varTablesDIR=config["varTablesDIR"], sample=pandas.read_table(config["sampleFILE"], " ").iterrows(), form=pandas.read_table(io.StringIO(config["sampleFORM"]), " ").iterrows())
+#ALLs ~ expand("{outputDIR}/{varTablesDIR}/all.samples.varScan.{form[1][varType]}{form[1][annotated]}.txt", outputDIR=config["outputDIR"], varTablesDIR=config["varTablesDIR"], form=pandas.read_table(io.StringIO(config["sampleFORM"]), " ").iterrows())
+#  Call Single Runs Via:
+#VcfSplit ~ expand("{outputDIR}/{varScanSplitDIR}/{samples}_{chrLIST}.varScan.{varType}.vcf", outputDIR=config["outputDIR"], varScanSplitDIR=config["varScanSplitDIR"], samples=config["sample"], chrLIST=config["chrLIST"], varType=config["varType"])
+#VcfUnsplit   ~ expand("{outputDIR}/{varScanDIR}/{samples}.varScan.{varType}.vcf", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"], samples=config["sample"], varType=config["varType"])
+#  Annotated Single Runs (Requiring modules/utils) Via:
+#VCFs ~ expand("{outputDIR}/{varScanDIR}/{samples}.varScan.{form[1][varType]}{form[1][annotated]}.vcf", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"], samples=config["sample"], form=pandas.read_table(io.StringIO(config["sampleFORM"]), " ").iterrows())
+#TXTs ~ expand("{outputDIR}/{varTablesDIR}/{samples}.varScan.{form[1][varType]}{form[1][annotated]}.txt", outputDIR=config["outputDIR"], varTablesDIR=config["varTablesDIR"], samples=config["sample"], form=pandas.read_table(io.StringIO(config["sampleFORM"]), " ").iterrows())
+#ALLs ~ expand("{outputDIR}/{varTablesDIR}/all.samples.varScan.{form[1][varType]}{form[1][annotated]}.txt", outputDIR=config["outputDIR"], varTablesDIR=config["varTablesDIR"], samples=config["sample"], form=pandas.read_table(io.StringIO(config["sampleFORM"]), " ").iterrows())
+
+
+#***** mpileup *****
+#  Included:
+#    mpileupUNSPLIT:     Generated mpileup file from BAM file.
+#    mpileupSPLIT:     Generated mpileup file from BAM file.
+#  Files:
+#    Input:      .BAM
+#    Output:     .mpileup
+include: "/Users/tboyarski/Desktop/Tim/BCCRC-Snakemake/modules/mpileup/mpileup_INCLUDE"
+#  Required: NONE
+#  Call via: 
+#UNSPLIT  expand("{outputDIR}/{mpileupDIR}/{samples}.mpileup", outputDIR=config["outputDIR"], mpileupDIR=config["mpileupDIR"], samples=config["sample"])
+#SPLIT    expand("{outputDIR}/{mpileupDIR}/{samples}_{chrLIST}.mpileup", outputDIR=config["outputDIR"], mpileupDIR=config["mpileupDIR"], samples=config["sample"], chrLIST=config["chrLIST"])
+
+
+#**** processBam ****:
+#  Included:
+#      alignBAM_bwa:       BAM generation from a '.fastq' file.
+#      bam2fastq:          Fastq generation from a '.BAM' file.
+#      cleanBAM:           Cleans the provided SAM/BAM, soft-clipping beyond-end-of-reference alignments and setting MAPQ to 0 for unmapped reads.
+#      fastq2GZ:           Compress a '.fastq' file into a '.fastq.gz' file.
+#      fastqc:             Run Fastqc on '.BAM' files.
+#      filteredBAM:        Filtering of a '.BAM' file on read quality.
+#      fixmateBAM:         Fill in mate coordinates, ISIZE, and mate related flags from a name-sorted alignment.
+#      indexBAM:           Indexing of a '.BAM' file.
+#      markdupBAM:         Mark diplicates in a '.BAM' file and produce metrics.
+#      namesortBAM:        Produce a name sorted '.BAM' file.
+#      rmdupBAM:           Remove dupliates in a '.BAM' file.
+#      sortBAM_biobambam:  Sorting of the BAM file, via SAMTOOLS, or BIOBAMBAM.
+#      sortBAM_samtools:   Sorting of the BAM file, via SAMTOOLS, or BIOBAMBAM.
+#  Files:
+#      input:      X.BAM
+#      output:     X_{fileTAG}.BAM.
+#                  X_{fileTAG}.BAM.BAI
+include: "/Users/tboyarski/Desktop/Tim/BCCRC-Snakemake/modules/processBam/processBam_INCLUDE"
+#  Required: NONE
 #  Call via:
-# expand("{outputDIR}/{vcfDIR}/{samples}.varScan.{varType}.vcf", outputDIR=config["outputDIR"], vcfDIR=config["vcfDIR"], samples=config["sample"], varType=config["varType"])      #mpileup2
-# expand("{outputDIR}/{vcfDIR}/{index[1][tumor]}_{index[1][normal]}.varScan.{varType}.txt", outputDIR=config["outputDIR"], vcfDIR=config["vcfDIR"], index=pandas.read_table(config["sampleFILE"], " ").iterrows(), varType=config["varType"])  #somTumorNormal
-
-
-#***** annotate *****
-#  Included:
-#    annotate:     Annotation of a '.VCF' file.
-#  Files:
-#    Input:      .vcf
-#    Output:     .annotate.vcf
-include: "/home/tboyarski/share/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake/modules/annotate/annotate_INCLUDE"
-#  Required: NONE
-#  Call via: 
-#    expand("{outputDIR}/{annotateDIR}/{samples}.BAMjsonYAML", outputDIR=config["outputDIR"], annotateDIR=config["annotateDIR"], samples=config["sample"])
-
-
-#***** getVarTable *****
-#  Included:
-#    getVarTable:     Generates a '.TXT' file from a '.VCF' file.
-#  Files:
-#    Input:      .vcf
-#    Output:     .txt
-include: "/home/tboyarski/share/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake/modules/getVarTable/getVarTable_INCLUDE"
-#  Required: NONE
-#  Call via: 
-#  expand("{outputDIR}/{getVarTableDIR}/{samples}.varScan.snps.txt", outputDIR=config["outputDIR"], getVarTableDIR=config["getVarTableDIR"], samples=config["sample"])
-#  expand("{outputDIR}/{getVarTableDIR}/{index[1][tumor]}_{index[1][normal]}.varScan.{varType}.txt", outputDIR=config["outputDIR"], getVarTableDIR=config["getVarTableDIR"], index=pandas.read_table(config["sampleFILE"], " ").iterrows(), varType=config["varType"])
+#alignBAM_bwa      ~ expand("{outputDIR}/{processBamDIR}/{samples}_realigned.bam", outputDIR=config["outputDIR"], processBamDIR=config["processBamDIR"], samples=config["sample"])
+#bam2fastq         ~ expand("{outputDIR}/{fastqDIR}/{samples}.{readDirection}.fastq.gz", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], samples=config["sample"], readDirection=["1", "2"])
+#cleanBAM          ~ expand("{outputDIR}/{processBamDIR}/{samples}_clean.bam", outputDIR=config["outputDIR"], processBamDIR=config["processBamDIR"], samples=config["sample"])
+#fastq2GZ          ~ expand("{outputDIR}/{fastqDIR}/{samples}.{readDirection}.fastq.gz", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], samples=config["sample"], readDirection=["1", "2"])
+#fastqc            ~ expand("{outputDIR}/{fastqDIR}/{samples}_fastqc.zip", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], samples=config["sample"])
+#filteredBAM       ~ expand("{outputDIR}/{processBamDIR}/{samples}_filtered.bam", outputDIR=config["outputDIR"], processBamDIR=config["processBamDIR"], samples=config["sample"])
+#fixmateBAM        ~ expand("{outputDIR}/{processBamDIR}/{samples}_fixmate.bam", outputDIR=config["outputDIR"], processBamDIR=config["processBamDIR"], samples=config["sample"])
+#indexBAM          ~ expand("{outputDIR}/{processBamDIR}/{samples}{fileTAG}.bam.bai", outputDIR=config["outputDIR"], processBamDIR=config["processBamDIR"], samples=config["sample"], fileTAG=config["fileTAG"])
+#markdupBAM        ~ expand("{outputDIR}/{processBamDIR}/{samples}_markdup.bam", outputDIR=config["outputDIR"], processBamDIR=config["processBamDIR"], samples=config["sample"])
+#namesortBAM       ~ expand("{outputDIR}/{processBamDIR}/{samples}_namesort.bam", outputDIR=config["outputDIR"], processBamDIR=config["processBamDIR"], samples=config["sample"])
+#rmdupBAM          ~ expand("{outputDIR}/{processBamDIR}/{samples}_rmdup.bam", outputDIR=config["outputDIR"], processBamDIR=config["processBamDIR"], samples=config["sample"])
+#sortBAM_biobambam ~ expand("{outputDIR}/{processBamDIR}/{samples}_sorted.bam", outputDIR=config["outputDIR"], processBamDIR=config["processBamDIR"], samples=config["sample"])
+#sortBAM_samtools  ~ expand("{outputDIR}/{processBamDIR}/{samples}_sorted.bam", outputDIR=config["outputDIR"], processBamDIR=config["processBamDIR"], samples=config["sample"])

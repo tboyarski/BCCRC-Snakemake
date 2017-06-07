@@ -5,5 +5,5 @@ rm -rf .snakemake/
 rm Snakefile
 rm input/config.yaml
 rm input/config.json
-rm dag.svg
+m dag.svg
 python buildPipe.py

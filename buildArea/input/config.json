@@ -1,59 +1,137 @@
 {
-    "indexBAM": {
-        "clusterSpec": "-V -S /bin/bash -o log/reBam -e log/reBam -l h_vmem=10G -pe ncpus 1"
+    "markdupBAM": {
+        "jobName": "{rule}_{wildcards.sampleMDB}",
+        "clusterSpec": "-V -S /bin/bash -o log/processBam/markdupBAM -e log/processBam/markdupBAM -l h_vmem=10G -pe ncpus 1"
     },
-    "undoBAM": {
-        "clusterSpec": "-V -S /bin/bash -o log/reBam -e log/reBam -l h_vmem=10G -pe ncpus 1"
+    "tableMERGE_ADAPTOR": {
+        "jobName": "{rule}_all.samples_{wildcards.annotationSUFFIX}",
+        "clusterSpec": "-V -S /bin/bash -o log/utils/tableMERGE -e log/utils/tableMERGE -l h_vmem=10G -pe ncpus 1"
+    },
+    "indel": {
+        "jobName": "{rule}_{wildcards.sampleIndel}",
+        "clusterSpec": "-V -S /bin/bash -o log/annotateVcf/indel -e log/annotateVcf/indel -l h_vmem=20G -pe ncpus 1"
+    },
+    "sortBAM_biobambam": {
+        "jobName": "{rule}_{wildcards.sampleSBB}",
+        "clusterSpec": "-V -S /bin/bash -o log/processBam/sortBAM_biobambam -e log/processBam/sortBAM_biobambam -l h_vmem=10G -pe ncpus 1"
+    },
+    "mpileup2vcf_SingleUNSPLIT": {
+        "jobName": "{rule}_{wildcards.sampleMPU2VCFSU}_{wildcards.varTypeMPU2VCFSU}",
+        "clusterSpec": "-V -S /bin/bash -o log/varScan/mpileup2vcf_SingleUNSPLIT -e log/varScan/mpileup2vcf_SingleUNSPLIT -l h_vmem=10G -pe ncpus 1"
+    },
+    "fixmateBAM": {
+        "jobName": "{rule}_{wildcards.sampleFMB}",
+        "clusterSpec": "-V -S /bin/bash -o log/processBam/fixmateBAM -e log/processBam/fixmateBAM -l h_vmem=10G -pe ncpus 1"
+    },
+    "namesortBAM": {
+        "jobName": "{rule}_{wildcards.sampleNSB}",
+        "clusterSpec": "-V -S /bin/bash -o log/processBam/namesortBAM -e log/processBam/namesortBAM -l h_vmem=10G -pe ncpus 1"
+    },
+    "sam2BAM": {
+        "jobName": "{rule}_{wildcards.sampleS2B}",
+        "clusterSpec": "-V -S /bin/bash -o log/utils/sam2BAM -e log/utils/sam2BAM -l h_vmem=10G -pe ncpus 1"
+    },
+    "vcfGetTable_utilsDIR": {
+        "jobName": "{rule}_{wildcards.sampleVCFGT}",
+        "clusterSpec": "-V -S /bin/bash -o log/utils/vcfGetTable -e log/utils/vcfGetTable -l h_vmem=10G -pe ncpus 1"
+    },
+    "vcfGetTable_annotateVcfDIR": {
+        "jobName": "{rule}_{wildcards.sampleVCFGT}",
+        "clusterSpec": "-V -S /bin/bash -o log/utils/vcfGetTable -e log/utils/vcfGetTable -l h_vmem=10G -pe ncpus 1"
+    },
+    "fastqc": {
+        "jobName": "{rule}_{wildcards.sampleFQC}",
+        "clusterSpec": "-V -S /bin/bash -o log/processBam/fastqc -e log/processBam/fastqc -l h_vmem=10G -pe ncpus 1"
+    },
+    "sortBAM_samtools": {
+        "jobName": "{rule}_{wildcards.sampleSBS}",
+        "clusterSpec": "-V -S /bin/bash -o log/processBam/sortBAM_samtools -e log/processBam/sortBAM_samtools -l h_vmem=10G -pe ncpus 1"
+    },
+    "filteredBAM": {
+        "jobName": "{rule}_{wildcards.sampleFB}",
+        "clusterSpec": "-V -S /bin/bash -o log/processBam/filteredBAM -e log/processBam/filteredBAM -l h_vmem=10G -pe ncpus 1"
+    },
+    "mpileup2vcf_PairSPLIT": {
+        "jobName": "{rule}_{wildcards.sampletMPU2VCFPS}_{wildcards.samplenMPU2VCFPS}_chr{wildcards.chrMPU2}.SNPandINDEL",
+        "clusterSpec": "-V -S /bin/bash -o log/varScan/mpileup2vcf_PairSPLIT -e log/varScan/mpileup2vcf_PairSPLIT -l h_vmem=10G -pe ncpus 1"
+    },
+    "noncanonical": {
+        "jobName": "{rule}_{wildcards.sampleNCAN}",
+        "clusterSpec": "-V -S /bin/bash -o log/annotateVcf/noncanonical -e log/annotateVcf/noncanonical -l h_vmem=10G -pe ncpus 1"
+    },
+    "indexBAM": {
+        "jobName": "{rule}_{wildcards.sampleIB}",
+        "clusterSpec": "-V -S /bin/bash -o log/processBam/indexBAM -e log/processBam/indexBAM -l h_vmem=10G -pe ncpus 1"
+    },
+    "vcfSORT_varScanDIR": {
+        "jobName": "{rule}_{wildcards.sampleVCFS}",
+        "clusterSpec": "-V -S /bin/bash -o log/utils/vcfSORT -e log/utils/vcfSORT -l h_vmem=10G -pe ncpus 1"
+    },
+    "vcfMERGE_varScanDIR": {
+        "jobName": "{rule}_{wildcards.sampleVCFM}_{wildcards.varTypeVCFM}",
+        "clusterSpec": "-V -S /bin/bash -o log/utils/vcfMERGE -e log/utils/vcfMERGE -l h_vmem=10G -pe ncpus 1"
+    },
+    "bam2fastq": {
+        "jobName": "{rule}_{wildcards.sampleB2F}",
+        "clusterSpec": "-V -S /bin/bash -o log/processBam/bam2fastq -e log/processBam/bam2fastq -l h_vmem=10G -pe ncpus 1"
+    },
+    "canonical": {
+        "jobName": "{rule}_{wildcards.sampleCAN}",
+        "clusterSpec": "-V -S /bin/bash -o log/annotateVcf/canonical -e log/annotateVcf/canonical -l h_vmem=10G -pe ncpus 1"
+    },
+    "mpileup2cns_SingleUNSPLIT": {
+        "jobName": "{rule}_{wildcards.sampleMPU2CNS}",
+        "clusterSpec": "-V -S /bin/bash -o log/varScan/mpileup2cns_SingleUNSPLIT -e log/varScan/mpileup2cns_SingleUNSPLIT -l h_vmem=10G -pe ncpus 1"
     },
     "cosmic": {
-        "clusterSpec": "-V -S /bin/bash -o log/annotate -e log/annotate -l h_vmem=10G -pe ncpus 1"
+        "jobName": "{rule}_{wildcards.sampleCOS}",
+        "clusterSpec": "-V -S /bin/bash -o log/annotateVcf/cosmic -e log/annotateVcf/cosmic -l h_vmem=10G -pe ncpus 1"
+    },
+    "fastq2GZ": {
+        "jobName": "{rule}_{wildcards.sampleFGZ}",
+        "clusterSpec": "-V -S /bin/bash -o log/processBam/fastq2GZ -e log/processBam/fastq2GZ -l h_vmem=10G -pe ncpus 1"
+    },
+    "mpileupUNSPLIT": {
+        "jobName": "{rule}_{wildcards.sampleMPUU}",
+        "clusterSpec": "-V -S /bin/bash -o log/mpileup/mpileupUNSPLIT -e log/mpileup/mpileupUNSPLIT -l h_vmem=10G -pe ncpus 1"
+    },
+    "cleanBAM": {
+        "jobName": "{rule}_{wildcards.sampleCB}",
+        "clusterSpec": "-V -S /bin/bash -o log/processBam/cleanBAM -e log/processBam/cleanBAM -l h_vmem=10G -pe ncpus 1"
+    },
+    "alignBAM_bwa": {
+        "jobName": "{rule}_{wildcards.sampleAB}",
+        "clusterSpec": "-V -S /bin/bash -o log/processBam/alignBAM_bwa -e log/processBam/alignBAM_bwa -l h_vmem=10G -pe ncpus 1"
+    },
+    "mpileup2copycall_PairUNSPLIT": {
+        "jobName": "{rule}_{wildcards.sampletMPU2CC}_{wildcards.samplenMPU2CC}",
+        "clusterSpec": "-V -S /bin/bash -o log/varScan/mpileup2copycall_PairUNSPLIT -e log/varScan/mpileup2copycall_PairUNSPLIT -l h_vmem=10G -pe ncpus 1"
+    },
+    "mpileupSPLIT": {
+        "jobName": "{rule}_{wildcards.sampleMPUS}_chr{wildcards.chrMPUS}",
+        "clusterSpec": "-V -S /bin/bash -o log/mpileup/mpileupSPLIT -e log/mpileup/mpileupSPLIT -l h_vmem=10G -pe ncpus 1"
+    },
+    "mpileup2vcf_SingleSPLIT": {
+        "jobName": "{rule}_{wildcards.sampleMPU2VCFSS}_chr{wildcards.chrMPU2VCFSS}_{wildcards.varTypeMPU2VCFSS}",
+        "clusterSpec": "-V -S /bin/bash -o log/varScan/mpileup2vcf_SingleSPLIT -e log/varScan/mpileup2vcf_SingleSPLIT -l h_vmem=10G -pe ncpus 1"
+    },
+    "mpileup2copynum_PairUNSPLIT": {
+        "jobName": "{rule}_{wildcards.sampletMPU2CN}_{wildcards.samplenMPU2CN}",
+        "clusterSpec": "-V -S /bin/bash -o log/varScan/mpileup2copynum_PairUNSPLIT -e log/varScan/mpileup2copynum_PairUNSPLIT -l h_vmem=10G -pe ncpus 1"
+    },
+    "rmdupBAM": {
+        "jobName": "{rule}_{wildcards.sampleRDB}",
+        "clusterSpec": "-V -S /bin/bash -o log/processBam/rmdupBAM -e log/processBam/rmdupBAM -l h_vmem=10G -pe ncpus 1"
+    },
+    "mpileup2vcf_PairUNSPLIT": {
+        "jobName": "{rule}_{wildcards.sampletMPU2VCFPU}_{wildcards.samplenMPU2VCFPU}.SNPandINDEL",
+        "clusterSpec": "-V -S /bin/bash -o log/varScan/mpileup2vcf_PairUNSPLIT -e log/varScan/mpileup2vcf_PairUNSPLIT -l h_vmem=10G -pe ncpus 1"
+    },
+    "dbsnp": {
+        "jobName": "{rule}_{wildcards.sampleDbSnp}",
+        "clusterSpec": "-V -S /bin/bash -o log/annotateVcf/dbsnp -e log/annotateVcf/dbsnp -l h_vmem=10G -pe ncpus 1"
     },
     "__default__": {
         "clusterSpec": "-V -S /bin/bash -o log -e log -l h_vmem=10G -pe ncpus 1"
-    },
-    "mpileup2snp": {
-        "clusterSpec": "-V -S /bin/bash -o log/varScan -e log/varScan -l h_vmem=10G -pe ncpus 1"
-    },
-    "canonical": {
-        "clusterSpec": "-V -S /bin/bash -o log/annotate -e log/annotate -l h_vmem=10G -pe ncpus 1"
-    },
-    "getVarTable": {
-        "clusterSpec": "-V -S /bin/bash -o log/getVarTable -e log/getVarTable -l h_vmem=10G -pe ncpus 1"
-    },
-    "mpileup2indel": {
-        "clusterSpec": "-V -S /bin/bash -o log/varScan -e log/varScan -l h_vmem=10G -pe ncpus 1"
-    },
-    "filteredBAM": {
-        "clusterSpec": "-V -S /bin/bash -o log/reBam -e log/reBam -l h_vmem=10G -pe ncpus 1"
-    },
-    "sortBAM": {
-        "clusterSpec": "-V -S /bin/bash -o log/reBam -e log/reBam -l h_vmem=10G -pe ncpus 1"
-    },
-    "alignBAM": {
-        "clusterSpec": "-V -S /bin/bash -o log/reBam -e log/reBam -l h_vmem=10G -pe ncpus 1"
-    },
-    "somTumorNormalUNSPLIT": {
-        "clusterSpec": "-V -S /bin/bash -o log/varScan -e log/varScan -l h_vmem=10G -pe ncpus 1"
-    },
-    "snp": {
-        "clusterSpec": "-V -S /bin/bash -o log/annotate -e log/annotate -l h_vmem=10G -pe ncpus 1"
-    },
-    "somTumorNormalMERGE": {
-        "clusterSpec": "-V -S /bin/bash -o log/varScan -e log/varScan -l h_vmem=10G -pe ncpus 1"
-    },
-    "mPileSPLIT": {
-        "clusterSpec": "-V -S /bin/bash -o log/mPile -e log/mPile -l h_vmem=10G -pe ncpus 1"
-    },
-    "indel": {
-        "clusterSpec": "-V -S /bin/bash -o log/annotate -e log/annotate -l h_vmem=10G -pe ncpus 1"
-    },
-    "rmdupBAM": {
-        "clusterSpec": "-V -S /bin/bash -o log/reBam -e log/reBam -l h_vmem=10G -pe ncpus 1"
-    },
-    "mPileUNSPLIT": {
-        "clusterSpec": "-V -S /bin/bash -o log/mPile -e log/mPile -l h_vmem=10G -pe ncpus 1"
-    },
-    "somTumorNormalSPLIT": {
-        "clusterSpec": "-V -S /bin/bash -o log/varScan -e log/varScan -l h_vmem=10G -pe ncpus 1"
     }
 }

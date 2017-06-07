@@ -1,3 +1,8 @@
+#---------------------
+# Author: tboyarski
+# Date: 2017-06-07 @ 10-26 
+#---------------------
+
 # Required library to make shell calls.
 from subprocess import call
 
@@ -8,22 +13,24 @@ CHRTYPE="hncbi"
 YAMLFILE="input/config.yaml"
 CLUSTERFILE="input/config.json"
 SNAKEFILE="Snakefile"
-snakeDIR="~/share/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake"
+snakeDIR="/Users/tboyarski/Desktop/Tim/BCCRC-Snakemake"
+
 
 # Call to generate .YAML and Snakefiles with header information.
-call("python " + snakeDIR + "/modules/buildFile/buildFile.py " + TYPE + " " + SAMPLE + " " + CHRTYPE + " " +  YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+call('python ' + snakeDIR + '/modules/buildFile/buildFile.py ' + TYPE + ' ' + SAMPLE + ' ' + CHRTYPE + ' ' +  YAMLFILE + ' ' + CLUSTERFILE + ' ' + SNAKEFILE, shell=True)
 
-# Call to populate the .YAML with paramters and the Snakefile with rules.
-call("python " + snakeDIR + "/modules/reBam/reBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Module 1:
+call('python ' + snakeDIR + '/modules/utils/utils.py ' + YAMLFILE + ' ' + CLUSTERFILE + ' ' +  SNAKEFILE, shell=True)
 
-# Call to generate MPileUp files from previously created BAM files.
-call("python " + snakeDIR + "/modules/mPile/mPile.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Module 2:
+call('python ' + snakeDIR + '/modules/annotateVcf/annotateVcf.py ' + YAMLFILE + ' ' + CLUSTERFILE + ' ' +  SNAKEFILE, shell=True)
 
-# Call to generate varScan.snps.vcf files from previously created mpileup files.
-call("python " + snakeDIR + "/modules/varScan/varScan.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Module 3:
+call('python ' + snakeDIR + '/modules/varScan/varScan.py ' + YAMLFILE + ' ' + CLUSTERFILE + ' ' +  SNAKEFILE, shell=True)
 
-# Call to generate annotated .vcf files from previously .vcf files.
-call("python " + snakeDIR + "/modules/annotate/annotate.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Module 4:
+call('python ' + snakeDIR + '/modules/mpileup/mpileup.py ' + YAMLFILE + ' ' + CLUSTERFILE + ' ' +  SNAKEFILE, shell=True)
 
-# Call to generate varScan.snps.vcf table files from previously created vcf files.
-call("python " + snakeDIR + "/modules/getVarTable/getVarTable.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Module 5:
+call('python ' + snakeDIR + '/modules/processBam/processBam.py ' + YAMLFILE + ' ' + CLUSTERFILE + ' ' +  SNAKEFILE, shell=True)
+
