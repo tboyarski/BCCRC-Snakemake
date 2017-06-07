@@ -1,0 +1,73 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:	    2017-05-29                                      
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+## Call: call("python " + snakeDIR + "/modules/processBam/processBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .BAM            
+# Output:                                   .1.fastq
+#                                           .2.fastq     
+# Purpose: Generate the original fastq paired-end reads     
+#   from a BAM file, via Picard.                            
+#
+#   *** NOTE *** Input files are always kept. No way via this 
+#       script to automate their destruction. This was done to
+#       avoid the risk of deleting the original '.BAM' files.
+#
+#   *** NOTE *** The process substitution removed as this is 
+#       a OS specific comand.
+#
+#   *** NOTE *** The "/dev/stdin/" on line 57 makes this module
+#       incompatible with non-UNIX systems. 
+#
+#   *** NOTE *** Newer versions of Samtools (E.g. 1.4.1) require
+#       different arguments for sorted (Line 55). Use the following 
+#       replacement line when using newer versions of samtools
+#       callString += ' | ' + config["processBam_samtoolsProg"] + ' sort -n -m ' + str(config["samtoolsSortMem"]) + ' - -T' + str(params.logNAME) + '.namesort'
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used for system calls.
+from subprocess import call
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+rule bam2fastq:
+    input: 
+        expand("{inputDIR}/{rawBamDIR}/{{sampleB2F}}.bam", inputDIR=config["inputDIR"], rawBamDIR=config["rawBamDIR"])
+    output:
+        expand("{outputDIR}/{fastqDIR}/{{sampleB2F}}.{readDirection}.fastq", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], readDirection=["1", "2"])
+    params:
+        picardARGS=config["picardValStringency"] + ' ' + config["picardMaxRec"],
+        logNAME="bam2fastq." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["processBamDIR"] + '/bam2fastq'
+    run:
+        # 1.A - Base call string.
+        callString = config["processBam_samtoolsProg"] + ' view -bF 512 ' + str(input)
+        
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> '  + str(log) + '/' + str(params.logNAME) + '.vendor_failed_reads.log'
+
+        # 1.C - Continuation of base call by piping data into sorting algorithm.
+        callString += ' | ' + config["processBam_samtoolsProg"] + ' sort -no -m ' + str(config["samtoolsSortMem"]) + ' - ' + str(params.logNAME) + '.namesort'
+        
+        # 1.D - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> '  + str(log) + '/' + str(params.logNAME) + '.namesort.log'
+               
+        # 1.E - Continuation of base call by piping sorted data into conversion tool.
+        # **Note** The inline process substitution in the second line may be causing issues on MacOSX.
+        callString += ' | ' + config["processBam_picardProg"] + ' SamToFastq ' + str(params.picardARGS) \
+        + ' I=/dev/stdin FASTQ=' + str(output[0]) + ' SECOND_END_FASTQ=' + str(output[1])
+        
+        # 1.F - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
+        
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

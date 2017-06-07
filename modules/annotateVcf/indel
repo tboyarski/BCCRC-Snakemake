@@ -1,0 +1,50 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-05-26
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/annontateVcf/annoateVcf.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .vcf
+# Output:                                   .indel_annotated.vcf
+# Purpose: Annotate a '.VCF' file via indel form.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+from time import gmtime, strftime
+from subprocess import call
+
+rule indel:
+    input:
+        expand("{outputDIR}/{annotateVcfDIR}/{{sampleIndel}}.vcf", outputDIR=config["outputDIR"], annotateVcfDIR=config["annotateVcfDIR"])
+    output:
+        expand("{outputDIR}/{annotateVcfDIR}/{{sampleIndel}}.indel_annotated.vcf", outputDIR=config["outputDIR"], annotateVcfDIR=config["annotateVcfDIR"])
+    params:
+        logNAME="indel." + strftime("%Y-%m-%d.%H-%M-%S", gmtime())
+    log:
+        "log/" + config["annotateVcfDIR"] + '/indel/'
+    run:
+        # 1.A - Base call string.
+        callString=config["annotateVcf_javaProg"] + ' ' + config["annotateVcf_snpSiftProg"] + ' annotate -id ' \
+        + config["knownIndel1000G"] + ' ' + str(input)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.1000g.log'
+
+        # 1.C - Piping of data into a secondary annotation process.
+        callString += ' | ' + config["annotateVcf_javaProg"] + ' ' + config["annotateVcf_snpSiftProg"] + ' annotate -id ' \
+        + config["knownIndelMills1000G"] + ' -'
+        
+        # 1.D - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.mills_1000g.log'
+        
+        # 1.E - Piping of data into a tertiary annotation process.
+        callString += ' | ' + config["annotateVcf_javaProg"] + ' ' + config["annotateVcf_snpSiftProg"] + ' annotate -id ' \
+        + config["annotateDbSnp"] + ' -' + '.dbSnp > ' + str(output)
+        
+        # 1.F - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
+        
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

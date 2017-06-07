@@ -1,0 +1,46 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:	    2017-05-11                                      
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+## Call: call("python " + snakeDIR + "/modules/processBam/processBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .bam            
+# Output:                                   _clean.bam      
+# Purpose: Clean up a '.BAM' or '.SAM' file.                
+#   **NOTE** This module has been copied but not validated. 
+#   **NOTE** This module was not used in any makefile calls.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used for system calls.
+from subprocess import call
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+rule cleanBAM:
+    input: 
+        "{pathCB}/{sampleCB}.bam"
+    output:
+        "{pathCB}/{sampleCB}_clean.bam"
+    params:
+        picardARGS=config["picardValStringency"] + ' ' + config["picardMaxRec"],
+        logNAME="cleanBAM." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["processBamDIR"] + '/cleanBAM'
+    run:
+        # 1.A - Base call string. 
+        callString=config["processBam_picardProg"] + ' CleanSam ' + str(params.picardARGS) + ' I=' + str(input) + ' O=' + str(output)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' &> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
+
+        # 1.C - Add short ciruiting removal of inputs to end of shell call.
+        if config["intermediateKEEP"] == False:
+            callString += ' && rm ' + str(input)
+
+        # 2.A - Printing system calls to a local file, and then executing them.
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

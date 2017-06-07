@@ -1,0 +1,52 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-06-02
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/mpileup/mpileup.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .bam
+# Output:                                   .mpileup        
+# Purpose: Generate an '.mpileup' file from a '.BAM' file.  
+#
+#   *** NOTE *** Input files are always kept. No way via this
+#     script to automate their destruction. This was done to
+#     avoid the risk of deleting the processed '.BAM' files.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Used for system calls.
+from subprocess import call
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+rule mpileupSPLIT:
+    input:
+        expand("{outputDIR}/{bamDIR}/{{sampleMPUS}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
+    output:
+        expand("{outputDIR}/{mpileupDIR}/{{sampleMPUS}}_{{chrMPUS}}.mpileup", outputDIR=config["outputDIR"], mpileupDIR=config["mpileupDIR"])
+    params:
+        mpileupARGS=config["countORPHAN"] + " " + config["noBAQ"] + " " + config["maxDEP"] + " " + config["mapQUAL"] + " " + config["bedFILE"],
+        refLOC=config["inputDIR"] + "/" + config["refDIR"] + "/" + config["refFILE"],
+        logNAME="mpileupSPLIT." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["mpileupDIR"] + "/mpileupSPLIT/"
+    run:
+        # 1.A - View input via Samtools.
+        callString=config["mpileup_samtoolsProg"] + ' view -bh -F ' + str(config["bitFLAG"]) + ' ' + str(input) + ' ' + wildcards.chrMPUS 
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.' + wildcards.chrMPUS + '.view.stderr'
+
+        # 1.C - Process into mpileup.
+        callString += ' | ' + config["mpileup_samtoolsProg"] + ' mpileup ' + str(params.mpileupARGS) + ' -f ' + str(params.refLOC) + ' - > ' + str(output)
+
+        # 1.D - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.' + wildcards.chrMPUS + '.mpileup.stderr'
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

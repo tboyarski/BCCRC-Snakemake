@@ -1,0 +1,26 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:	    2017-05-19                                      
+#-----------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/metricsBam/metricsBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .bam   
+# Output:                                   .XX   
+# Purpose: Generate an XXXXXXXX.
+#-----------------------------------------------------------
+from time import gmtime, strftime
+from subprocess import call
+
+rule XX:
+    input:
+        expand("{outputDIR}/{bamDIR}/{{samples}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
+    output:
+        expand("{outputDIR}/{metricsDIR}/{{samples}}.XXXXXXXX", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
+    params:
+        logNAME="XXXXXXX." + strftime("%Y-%m-%d.%H-%M-%S", gmtime()),
+        XXXXXXXX="XXXXXXXX" + " " + "XXXXXXXX" + " " + "XXXXXXXX"
+    log:
+        "log/" + config["bamMetricsDIR"] + "/insertSize"
+    run: 
+        call("XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX" + str(params.XXXXXXXX) + config["yamlParamter"] \
+        + " 2> " + str(log) + "/" + str(params.logNAME), shell=True)
+#-------------------------------------------------------------------------------------------------------

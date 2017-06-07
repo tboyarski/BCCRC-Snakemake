@@ -1,0 +1,27 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:	    2017-05-19                                      
+#-----------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/metricsBam/metricsBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .bam            
+# Output:                                   .flatstats      
+# Purpose: Use Samtools 'flagstat' command on a '.BAM' file.
+#-----------------------------------------------------------
+from time import gmtime, strftime
+from subprocess import call
+
+rule flagStats:
+    input:
+        expand("{outputDIR}/{bamDIR}/{{samples}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
+    output:
+        expand("{outputDIR}/{metricsDIR}/{{samples}}.flagstats", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
+    params:
+        logNAME="flagStats." + strftime("%Y-%m-%d.%H-%M-%S", gmtime())
+    log:
+        "log/" + config["bamMetricsDIR"] + "/flagStats"
+    run: 
+        callString=config["bamMetrics_samtoolsProg"] + ' flagstat ' + str(input) + ' > ' + str(output) \
+         + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-------------------------------------------------------------------------------------------------------

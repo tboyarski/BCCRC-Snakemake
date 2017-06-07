@@ -1,0 +1,44 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-05-29
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/processBam/processBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                            .BAM            
+# Output:                                           _filtered.BAM   
+# Purpose: Produce a filtered BAM file.                             
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Used for system calls.
+from subprocess import call
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+rule filteredBAM:
+    input:
+        "{pathFB}/{sampleFB}.bam"
+    output:
+        "{pathFB}/{sampleFB}_filtered.bam"
+    params:
+        bitFLAG=config["filterBitFlag"],
+        logNAME="filteredBAM." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["processBamDIR"] + '/filteredBAM'
+    run:
+        # 1.A - Base call string.
+        callString=config["processBam_samtoolsProg"] + ' view -bh -F ' + str(params.bitFLAG) + ' ' + str(input) + ' > ' + str(output)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.samtools.stderr'
+
+        # 1.C - Add short ciruiting removal of inputs to end of shell call.
+        if config["intermediateKEEP"] == False:
+            callString += ' && rm ' + str(input)
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-------------------------------------------------------------------------------------------------------

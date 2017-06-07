@@ -1,0 +1,48 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-05-11                                      
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + ROOT_PATH + "/modules/varScan/varScan.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .chr.varType.vcf
+# Output:                                   .varType.vcf    
+# Purpose: Merge chromosomal '.VCF' files into a single 
+#   genomic '.VCF' file. 
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+from time import localtime, strftime
+from subprocess import call
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Main working function for this adaptor. Utilized by multiple input sources.
+def mergeTable(input, output, logNAME):
+    # 1.A - Open and populate the target file.
+    with open(str(output), "w+") as outputTARGET:
+
+        # 1.A.1 - Copy over header-data shared across all '.VCF' files.
+        with open(str(input[0]), "r+") as inputTARGET:
+            for line in inputTARGET:
+                if line.startswith("#"):
+                    outputTARGET.write(line)
+
+        # 1.A.2 - Iterate over all input files, and their lines, copying if condition met.
+        for file in str(input).split():
+            with open(file, "r+") as inputTARGET:
+                for line in inputTARGET:
+                    if line.startswith("#") == False:
+                        outputTARGET.write(line)
+
+    # 2.A - Printing system calls to a local file, and then executing them.
+    call('echo "' + str(logNAME) + ':\n **Python Scripts Merging Files. No Shell Calls**\n" >> ' + config["shellCallFile"], shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# varScan -- Adaptor for merging of tables generaed by varScan module.
+rule vcfMERGE_varScanDIR:
+    input:
+        expand("{outputDIR}/{varScanSplitDIR}/{{sampleVCFM}}_{chrVCFM}.varScan.{{varTypeVCFM}}.vcf", outputDIR=config["outputDIR"], varScanSplitDIR=config["varScanSplitDIR"], chrVCFM=config["chrLIST"])
+    output:
+        expand("{outputDIR}/{varScanDIR}/{{sampleVCFM}}.varScan.{{varTypeVCFM}}.vcf", outputDIR=config["outputDIR"], varScanDIR=config["varScanDIR"])
+    params:
+        logNAME="vcfMERGE_varScanDIR." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["utilsDIR"]
+    run:  
+        mergeTable(input, output, params.logNAME)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

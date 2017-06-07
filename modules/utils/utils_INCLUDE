@@ -1,0 +1,28 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-05-11                                      
+#-----------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/varTable/varTable.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Purpose: Generate and merge variant tables. 
+#---------------------------------------------------------------------------
+
+########################################################################################################
+#                                  Include all required Snakefiles.                                    #
+########################################################################################################
+
+include: "sam2BAM"
+# sam2BAM - Produce a '.SAM' file from a '.BAM' file.
+
+include: "tableMERGE_ADAPTOR"
+# tableMERGE - Merge a mutliple variant tables into a single '.TXT' file. 
+
+include: "vcfMERGE_ADAPTOR"
+# vcfMERGE - Concatenate a series '.VCF' files together. Pulls headed from first file in list.
+
+include: "vcfSORT_ADAPTOR"
+# vcfSORT - Sort a '.VCF' file.
+
+include: "vcfGetTable_ADAPTOR"
+# tableGET - Generate a variant table from a '.VCF' file.
+
+########################################################################################################
