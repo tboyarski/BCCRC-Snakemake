@@ -1,0 +1,31 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:	    2017-03-28                                      
+#-----------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/tPile/tPile.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .BAM            
+# Output:                                   .mpileup        
+# Purpose: Generate an mPileUp file from a BAM file.        
+#-----------------------------------------------------------
+from time import localtime, strftime
+from subprocess import call
+
+rule tPileUNSPLIT:
+    input:
+        expand("{outputDIR}/{bamDIR}/{{samples}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
+    output:
+        temp(expand("{outputDIR}/{tpileDIR}/{{samples}}.mpileup", outputDIR=config["outputDIR"], tpileDIR=config["tpileDIR"]))
+    params:
+        bitFLAG=config["bitFLAG"],
+        tpilePARAMS=config["countORPHAN"] + " " + config["noBAQ"] + " " + config["maxDEP"] + " " + config["mapQUAL"],
+        refLOC=config["inputDIR"] + "/" + config["refDIR"] + "/" + config["refFILE"],
+        logNAME="tPile." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
+    log:
+        "log/" + config["tpileDIR"]
+    run: 
+        call(config["tPileUNSPLIT_samtoolsProg"] + ' view -bh -F ' + str(params.bitFLAG) + ' ' + str(input) \
+        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.view.stderr' \
+        + ' | ' + config["tPile_samtoolsProg"] + ' mpileup ' + str(params.mpilePARAMS) + ' -f ' + str(params.refLOC) + ' - > ' + str(output) \
+        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.mpileup.stderr', shell=True)
+#-------------------------------------------------------------------------------------------------------
+
