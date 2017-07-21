@@ -1,0 +1,112 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-06-23
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/fastqUtil/fastqUtil.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                            {samplePart}{sampleName}.fastq
+#                                                   ...
+#                                                   {samplePart}{sampleName}.fastq
+#
+# Output:                                           {sampleName}.fastq
+#
+# Purpose: Produce a single '.fastq' file from a list of 
+#   '.fastq' files.
+#
+#   **NOTE** The group of '.fastq' files must all contain an 
+#       enumerated prefix tag. This tag is used to  prevent 
+#       the generation of cyclical dependencies. Specifically 
+#       the wildcard is setup to stop when it encounters a '-' 
+#       character. Please use something similar to below:
+#           Part1-{sampleName}.fastq
+#           ...
+#           Partn-{sampleName}.fastq
+#
+#   **NOTE** Rule order is required as the merge is potenitally 
+#       possible at two different time points, before or after
+#       the compression of the '.fastq' file to '.fastq.gz' 
+#       format. As such, rules are listed explicitly to ensure
+#       the compression occur at the latest step possible, and only once.
+#
+#   **NOTE** Determination of the number of parts for each
+#       sample is determined from file. The following file 
+#       is read and used as the guideline for mergeing both 
+#       '.fastq' or '.bam files.
+#           -input/inputPartList.txt:
+#               sampleName partName
+#               Pfeiffer2 Part1-
+#               Pfeiffer2 Part2-
+#               Pfeiffer2 Part3-
+#               Pfeiffer2 Part4-
+#               Pfeiffer3 Part1-
+#               Pfeiffer3 Part2-
+#               Pfeiffer3 Part3-
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for system calls.
+from subprocess import call
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used to read the file to generate the sample list.
+from pandas import read_table
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+##################################################
+# mergeFASTQ_getInputFileList
+##################################################
+# Function opens the input parts file as described in the YAML. It takes the
+#   paired value formatting and generates a list of sample files for all the
+#   lines which contain the sample name.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+def mergeFASTQ_getInputFileList(wildcards):
+    fileList = []
+    with open(config["inputPartList"], 'r+') as inputPartFile:
+        for line in inputPartFile:
+            # Split each line to remove whitespace and generate the following:
+            # [0] = groupName
+            # [1] = fileName
+            lineArray = line.split(' ')
+            if lineArray[0] == str(wildcards.sampleFM):
+                fileList.append(config["mergeFastqRootDIR"] + "/" + lineArray[1].strip() + wildcards.readDirection + '.fastq' + wildcards.compressionSuffix)
+    # Prevent the function from returning an empty string.
+    if len(fileList) == 0:  
+        return "mergeFASTQ function call - No Files Found"
+    else:
+        return unpack(fileList)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-------------------
+rule mergeFASTQ:
+    input:
+        fastqPartList = mergeFASTQ_getInputFileList
+    output:
+        mergedFastq = temp(expand("{mergeFastqRootDIR}/{{sampleFM}}{{readDirection}}.fastq{{compressionSuffix}}", mergeFastqRootDIR=config["mergeFastqRootDIR"]))
+    wildcard_constraints:  
+        # Wildcard cannot contain certian characters.
+        sampleFM = config["sampleREGEX"],
+        # Contain at most 1 copy of '.#', where # = [0-9]
+        readDirection = config["fastqReadDirectionREGEX"],
+        # Contain at most 1 copy of '.gz'
+        compressionSuffix = config["fastqCompressionSuffixREGEX"]
+    log:
+        stdErr = "log/" + config["fastqUtilDIR"] + '/mergeFASTQ_PairedReadGz/mergeFASTQ_PairedReadGz_{sampleFM}.{readDirection}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run:
+        # 1.A - Base call string.
+        callString='cat ' + str(input.fastqPartList) + ' > ' + str(output.mergedFastq)
+        
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr)[:-7] + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

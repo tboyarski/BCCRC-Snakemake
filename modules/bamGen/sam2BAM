@@ -1,0 +1,45 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-06-21
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/utils/utils/utils.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                            .sam        
+#
+# Output:                                           .bam 
+#
+# Purpose: Produce a '.sam' file from a '.bam' file. 
+#
+#   *** NOTE *** Input files are always kept. No way via this
+#       script to automate their destruction. This was done to
+#       avoid the risk of deleting the original '.BAM' files.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Used for system calls.
+from subprocess import call
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+rule sam2BAM:
+    input:
+        inputSAM = "{pathS2B}/{sampleS2B}.sam"
+    output:
+        outputBAM = temp("{pathS2B}/{sampleS2B}.bam")
+    wildcard_constraints:
+        sampleS2B = config["sampleREGEX"]
+    log:
+        stdErr = "log/" + config["bamGenDIR"] + '/sam2BAM/sam2BAM_{sampleS2B}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.samtools.stderr'
+    run:
+        # 1.A - Base call string.
+        callString=config["bamGen_samtoolsProg"] + ' view ' + config["sam2BamARGS"] + ' ' + str(input.inputSAM) + ' > ' + str(output.outputBAM)
+        
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr)[:-16] + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

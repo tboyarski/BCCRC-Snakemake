@@ -1,0 +1,126 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-07-07
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + ROOT_PATH + "/modules/bamMetrics/bamMetrics.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .chr.varType.vcf
+#
+# Output:                                   .varType.vcf    
+#
+# Purpose: Concatenate different metrics files together.
+#   The differences in the log files was too hard to 
+#   propagate from just the input and output. Result is 
+#   a bit more code, but the logging and variable names
+#   seem a bit clearer.
+#
+#   **NOTE** At this time, fate of input files is undecided
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for system calls.
+from subprocess import call
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+##################################################
+# mergeCollectTable
+##################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Main working function for this merge file. Made as a separate function incase in preparation that
+# RnaSeq data can be generated from a second source. 
+def mergeCollectTable(input, output, log, headerLINE, startLINE, stopLINE):
+    # 1.A - Open and populate the target file.
+    with open(str(output), "w+") as outputTARGET:
+
+        # 1.A.1 - Copy over header line shared across all RnaSeq files, it's the 7th line in the file.
+        #           Prepend with 'sampleID' string to generate column for sample names.
+        with open(str(input[0]), "r+") as inputTARGET:
+            outputTARGET.write("sampleID\t" + inputTARGET.readlines()[headerLINE])
+
+        # 1.A.2 - Copy over the data from each RnaSeq file, it's the 8th line in the file. 
+        #           Prepend with sample name.
+        sampleNameCounter = 0
+        for file in str(input).split():
+            # For each input file.
+            with open(file, "r+") as inputTARGET:
+                # Setup loop variables
+                inputLINE = inputTARGET.readlines()
+                currLINE = startLINE
+                # Copy over all lines within the specified range, putting the same name at the start of each.
+                while currLINE <= stopLINE:
+                    outputTARGET.write(config["sample"][sampleNameCounter] + "\t" + inputLINE[currLINE])
+                    currLINE += 1
+                # Increase counter to coincide with name of next sample to be used.
+                sampleNameCounter += 1
+                
+    # 2.A - Printing system calls to a local file, and then executing them.
+    call('echo "#' + str(log.stdErr)[:-7] + ':\n#**Python Scripts Merging Files. No Shell Calls**\n" >> ' + config["shellCallFile"], shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule collectRNASeqMERGE:
+    input:
+        expand("{outputDIR}/{metricsDIR}/{samples}.collectRNASeq.txt", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"], samples=config["sample"])
+    output:
+        expand("{outputDIR}/{metricsDIR}/all.rnaseq_metrics", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
+    log:
+        stdErr = "log/" + config["bamMetricsDIR"] + '/collectRNASeqMERGE/collectRNASeqMERGE.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run:  
+        # 7th line is the header.
+        # 8th line is the sample specific output.
+        # Counting starts at 0.
+        mergeCollectTable(input, output, log, 6, 7, 7)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule collectWGSMERGE:
+    input:
+        expand("{outputDIR}/{metricsDIR}/{samples}.collectWGS.txt", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"], samples=config["sample"])
+    output:
+        expand("{outputDIR}/{metricsDIR}/all.wgs_metrics", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
+    log:
+        stdErr = "log/" + config["bamMetricsDIR"] + '/collectAlignmentSummaryMERGE/collectAlignmentSummaryMERGE.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run:  
+        # 7th line is the header.
+        # 8-10th line is the sample specific output.
+        # Counting starts at 0.
+        mergeCollectTable(input, output, log, 6, 7, 7)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule collectInsertSizeMERGE:
+    input:
+        expand("{outputDIR}/{metricsDIR}/{samples}.collectMultMetrics.insert_size_metrics", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"], samples=config["sample"])
+    output:
+        expand("{outputDIR}/{metricsDIR}/all.insert_size_metrics", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
+    log:
+        stdErr = "log/" + config["bamMetricsDIR"] + '/collectInsertSizeMERGE/collectInsertSizeMERGE.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run:  
+        # 7th line is the header.
+        # 8th line is the sample specific output.
+        # Counting starts at 0.
+        mergeCollectTable(input, output, log, 6, 7, 7)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule collectAlignmentSummaryMERGE:
+    input:
+        expand("{outputDIR}/{metricsDIR}/{samples}.collectMultMetrics.alignment_summary_metrics", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"], samples=config["sample"])
+    output:
+        expand("{outputDIR}/{metricsDIR}/all.alignment_summary_metrics", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
+    log:
+        stdErr = "log/" + config["bamMetricsDIR"] + '/collectAlignmentSummaryMERGE/collectAlignmentSummaryMERGE.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run:  
+        # 7th line is the header.
+        # 8-10th line is the sample specific output.
+        # Counting starts at 0.
+        mergeCollectTable(input, output, log, 6, 7, 9)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

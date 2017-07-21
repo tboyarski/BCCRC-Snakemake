@@ -1,0 +1,63 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski 
+# Date:     2017-07-05
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + ROOT_PATH + "/modules/varScan/varScan.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .chr.varType.vcf
+#
+# Output:                                   .varType.vcf    
+#
+# Purpose: Merge chromosomal '.VCF' files into a single 
+#   genomic '.VCF' file. 
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#-------------------
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used for system calls.
+from subprocess import call
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule mergeVCF:
+    input:
+        inputVcfList = expand("{{pathMV}}/{{sampleMVCF}}_{chrMVCF}.{{vcfProgramMVCF}}.{{varTypeMVCF}}.vcf", chrMVCF=config["chrLIST"])
+    output:
+        outputTxt = temp("{pathMV}/{sampleMVCF}.{vcfProgramMVCF}.{varTypeMVCF}.vcf")
+
+    wildcard_constraints:
+        # Constrain both wildcards to not start with '-' '_' or '\', must be comprised of only letters and numbers
+        sampleMVCF = config["sampleREGEX"],
+        # Constrain program name (E.g. varScan)
+        vcfProgramMVCF = config["vcfProgramREGEX"],
+        # Constrain both vartypes to be either 'snp' or 'indel'
+        varTypeMVCF = config["varTypeREGEX"],
+        # May or may not start with _, then consists of any number of letter, number or _, and must finish with a '.' AND a digit, or no '.' AND a digit
+        chrMVCF = config["chrREGEX"]
+    log:
+        stdErr = "log/" + config["vcfUtilDIR"] + '/mergeVCF/mergeVCF_{sampleMVCF}.{vcfProgramMVCF}.{varTypeMVCF}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run:  
+        # 1.A - Open and populate the target file.
+        with open(str(output.outputTxt), "w+") as outputTARGET:
+
+            # 1.A.1 - Copy over header-data shared across all '.VCF' files.
+            with open(str(input.inputVcfList[0]), "r+") as inputTARGET:
+                for line in inputTARGET:
+                    if line.startswith("#"):
+                        outputTARGET.write(line)
+
+            # 1.A.2 - Iterate over all input files, and their lines, copying if condition met.
+            for file in str(input.inputVcfList).split():
+                with open(file, "r+") as inputTARGET:
+                    for line in inputTARGET:
+                        if line.startswith("#") == False:
+                            outputTARGET.write(line)
+
+        # 2.A - Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr)[:-7] + ':\n#**Python Scripts Merging Files. No Shell Calls**\n" >> ' + config["shellCallFile"], shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

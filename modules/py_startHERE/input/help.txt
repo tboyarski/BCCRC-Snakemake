@@ -1,0 +1,6 @@
+# Author: Tim
+# Date: June 12th, 2017
+# Purpose: How to get a small sample '.BAM' file for this pipe.
+
+# This '.BAM' file is 40MB
+wget http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeUwRepliSeq/wgEncodeUwRepliSeqK562G1AlnRep1.bam

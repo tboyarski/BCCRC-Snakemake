@@ -1,0 +1,57 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-06-19
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/varScan/varScan.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+#
+# Purpose: Generate '.VCF' output from a '.mpileup' file. Able to 
+#   perform analysis on a per-chromosome basis if requested.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+########################################################################################################
+#                                          Usage Guidelines                                            #
+########################################################################################################
+# Due to potential for ambiguity conflicts, as some modules are capable of producing the same output, 
+#   it is important to provide Snakemake with guidance on which rule to chose.
+#
+# Local -------
+#   Explanation: To allow for the processing or either WGS or WGSxChromosome samples,  the chromosomal 
+#       wildcard is setup to be present or absent. In the event that the chromosome is absent, and a 
+#       tumor-normal sample is submitted for processing, then the single rule conflicts with the pair 
+#       rule. This is becuase the in the pair rule, the two sample wildcards are picked up properly and
+#       the chromosomal wildcard is a blank. Where as, in the single rule, the single sample wildcard 
+#       picks up the first sample, and the chromosomal wildcard picks up the second sample. Due to the 
+#       lax naming standard, there is an inability to differentiate between chromosome and sample names
+#       (both are allowed to use the following characters [0-98a-zA-Z.]. As such, the pair version of 
+#       mpileup2vcf must be chosen preferentially as the single version introduces incorrect pathing. 
+ruleorder: mpileup2vcf_pair > mpileup2vcf_single
+
+#   Explanation: To eliminate ambiguity as both rules produce the same output. The merging of files 
+#       should occurr after the generation of the '.vcf'. When backfilling wildcards, Snakemake will 
+#       then chose the mergeVCF rule, before chosing the mpileup2vcf_single. As a result of this choice,
+#       during execution, the order will then be:
+#           1 ) Start
+#           2) ...
+#           3) mpileup2vcf_single
+#           4) mergeVCF
+ruleorder: mergeVCF > mpileup2vcf_single
+########################################################################################################
+#                                  Include all required Snakefiles.                                    #
+########################################################################################################
+
+include: "conSeq"
+# conSeq - Generate concensus calls into a single file.
+
+include: "copycall"
+# copycall - Adjust for GC content and make preliminary calls on a tumor-normal copynumber file..
+
+include: "copynum"
+# copynum - Determine copy number changes in a tumor-normal sample. 
+
+include: "mpileup2vcf_pair"
+# mpileup2vcf_pair - Tumor-normal variant caller for chromosome file.
+
+include: "mpileup2vcf_single"
+# mpileup2vcf_single - '.VCF' generation from '.mpileup' file.
+
+#######################################################################################################

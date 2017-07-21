@@ -1,0 +1,55 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-06-30
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+## Call: call("python " + snakeDIR + "/modules/bamUtil/bamUtil.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    {sample}.bam
+#
+# Output:                                   {sample}_fixmate.bam    
+#
+# Purpose: Fill in mate coordinates, ISIZE, and mate related
+#   flags from a name-sorted alighnment.                    
+#
+#   **NOTE** This module has been copied but not validated. 
+#
+#   **NOTE** Omitted the following JAVA command to which     
+#       alters the position of the temp files produced by
+#       Java itself. 
+#       $(JAVA) -Xmx$(1) -Djava.io.tmpdir=$(TMPDIR) -jar $(JARDIR)/picard.jar FixMateInformation $(PICARD_OPTS) TMP_DIR=$(TMPDIR)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for system calls.
+from subprocess import call
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule fixmateBAM:
+    input: 
+        inputBAM = "{pathFMB}/{sampleFMB}.bam"
+    output:
+        fixmateBAM = temp("{pathFMB}/{sampleFMB}_fixmate.bam")
+    params:
+        picardARGS = config["picardValStringency"] + ' ' + config["picardMaxRec"]
+    log:
+        stdErr = "log/" + config["bamUtilDIR"] + '/fixmateBAM/fixmateBAM_{sampleFMB}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run:
+        # 1.A - Base call string.
+        callString=config["bamUtil_picardProg"] + ' FixMateInformation ' + str(params.picardARGS) + ' I=' + str(input.inputBAM) \
+        + ' O=' + str(output.fixmateBAM) + ' TMP_DIR=' + config["outputDIR"] + '/' + config["bamDIR"]
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' &> ' + str(log.stdErr)
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr)[:-7] + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

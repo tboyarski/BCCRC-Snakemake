@@ -1,0 +1,50 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-06-30
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/fastqUtil/fastqUtil.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                            {sample}.bam        
+#
+# Output:                                           {sample}_fastqc.zip 
+#
+# Purpose: Run fastqc on '.bam' files. 
+#
+#  **NOTE** Input files are always kept. No way via this
+#      script to automate their destruction. This was done to
+#      avoid the risk of deleting the processed '.bam' files.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for system calls.
+from subprocess import call
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule fastqc:
+    input:
+        inputBAM = expand("{{outputDIR}}/{bamDIR}/{{sampleFQC}}.bam", bamDIR=config["bamDIR"])
+    output:
+        outputZIP = expand("{{outputDIR}}/{fastqcDIR}/{{sampleFQC}}_fastqc.zip", fastqcDIR=config["fastqcDIR"])
+    params:
+        baseARGS=' -o ' + config["outputDIR"] + '/' + config["fastqcDIR"] + ' ' + config["nogroupFlag"] + ' '
+    log:
+        stdErr = "log/" + config["fastqUtilDIR"] + '/fastqc/fastqc_{sampleFQC}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run:
+        # 1.A - Base call string.
+        callString=config["fastqUtil_perlProg"] + ' ' + config["fastqc"] + str(params.baseARGS) + str(input.inputBAM)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr)[:-7] + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

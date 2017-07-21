@@ -1,0 +1,36 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-06-28
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/fastqUtil/fastqUtil.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+#
+# Purpose: Manipulate '.fastq' files.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+########################################################################################################
+#                                          Usage Guidelines                                            #
+########################################################################################################
+# Due to potential for ambiguity conflicts, as both the following modules are capable of producing the
+#   same output, it is important to provide Snakemake with guidance on which rule to chose.
+#
+#   Explanation: Disk space is more efficienctly used by compressing and then merging. As such,
+#       the output for fastqMERGE is requested first (think top down, so it is requested to happen
+#       after fastq2GZ). This way, the partial '.fastq' files are compressed with fastq2GZ, and then 
+#       they are merged. As opposed to merging the uncompressed files and then compressing the full
+#       file. It is best to have the compression happen prior to the merge.
+ruleorder: mergeFASTQ > fastq2GZ
+########################################################################################################
+#                                  Include all required Snakefiles.                                    #
+########################################################################################################
+
+include: "mergeFASTQ"
+# mergeFASTQ - Produce a single '.fastq' file from a list of '.fastq' files. Merging of read directed
+#   or compressed '.fastq' files is also possible via implicit rule wildcards. 
+
+include: "fastqc"
+# fastqc - Run perl QC script and convert a '.bam' file into a '.fastq.zip'
+
+include: "fastq2GZ"
+# fastq2GZ - Compress a '.fastq' file into a '.fastq.gz' file.
+
+########################################################################################################

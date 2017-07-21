@@ -1,0 +1,21 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:     2017-06-14
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/starFusion/starFusion.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    ./{processBamDIR}/junctions/{sample}_junctions.txt       
+#
+# Output:                                   ./{starFusionDIR}/fusions/{sample}_fusions.txt       
+#
+# Purpose: Generate fusion data from the STAR '_junction.txt' files. This is 
+#   a post-processing submodule for '.bam' files processed via alignBAM_starAligner.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+########################################################################################################
+#                                  Include all required Snakefiles.                                    #
+########################################################################################################
+
+include: "fusion"
+# fusion - Generate fusion data from the STAR '_junction.txt' files.
+
+########################################################################################################

@@ -1,29 +1,52 @@
 #-----------------------------------------------------------
-# Author:   Tim Boyarski                                    
-# Date:	    2017-05-19                                      
+# Author:   Tim Boyarski
+# Date:	    2017-07-07
 #-----------------------------------------------------------
 # Call: call("python " + snakeDIR + "/modules/metricsBam/metricsBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
 # Input:                                    .bam   
+#
 # Output:                                   .readLen   
+#
 # Purpose: Generate metrics on the read length of aligned
 #   '.BAM' files.
-#-----------------------------------------------------------
-from time import gmtime, strftime
-from subprocess import call
+#
+#   *** NOTE *** Input files are always kept. No way via this
+#       script to automate their destruction. This was done to
+#       avoid the risk of deleting the '.BAM' files.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PTYHON PACKAGES #
+#------------------
+# Used for timestamping the log files.
+from time import localtime, strftime
 
+# Used for system calls.
+from subprocess import call
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#------------------
 rule readLen:
     input:
-        expand("{outputDIR}/{bamDIR}/{{sampleRL}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
+        bamFile=expand("{outputDIR}/{bamDIR}/{{sampleRL}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
     output:
-        expand("{outputDIR}/{metricsDIR}/{{sampleRL}}.readLen", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
-    params:
-        logNAME="readLen." + strftime("%Y-%m-%d.%H-%M-%S", gmtime())
+        readLenFile=expand("{outputDIR}/{metricsDIR}/{{sampleRL}}.readLen", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
     log:
-        "log/" + config["bamMetricsDIR"] + "/readLen"
+        stdErr = "log/" + config["bamMetricsDIR"] + '/readLen/readLen_{sampleRL}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
     run: 
-        callString=config["bamMetrics_samtoolsProg"] + ' view ' + str(input) \
+        # 1.A Base call string.
+        callString=config["bamMetrics_samtoolsProg"] + ' view ' + str(input.bamFile) \
         + " | awk '{print length($10) }' | sort -n | uniq -c | sort -rn " \
-        + " | sed 's/^ \+//' > " + str(output)
-        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        + " | sed 's/^ \+//' > " + str(output.readLenFile)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+
+        # 2.A - Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr) + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
         call(callString, shell=True)
-#-------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+

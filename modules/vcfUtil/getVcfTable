@@ -1,0 +1,113 @@
+#-----------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:	    2017-06-21            
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/vcfUtil/vcfUtil.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .vcf
+#
+# Output:                                   .txt   
+#
+# Purpose: Generate a variant table from '.VCF' files.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for piping of stdout, and for system calls.
+from subprocess import call, Popen, PIPE
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+##################################################
+# getVcfFields
+##################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Function used to generate the vcfFields passed as a parameter which is then used to create 
+#   the table header-line. Function is able to process both 'single' and 'pair' samples.
+def getVcfFields():
+    finalString = config["vcfFields"]
+    if config["sampleFORMAT"] == 'single' or config["sampleFORMAT"] == 'csv':
+        finalString += " " + config["vcfInfoFieldsDbSnp"] + " " + config["vcfGenFieldsSingle"]
+    elif config["sampleFORMAT"] == 'pair':
+        finalString += " " + config["vcfInfoFieldsPair"] + " " + config["vcfGenFieldsPair"]
+    return finalString
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+##################################################
+# getSampleName
+##################################################
+# Function used to parse the sample name from the file name, without explicitly using regex, 
+#   while still being able to process both 'single' and 'pair' samples.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+def getSampleName(outputFileName):
+    # 1.A - Process if single
+    if config["sampleFORMAT"] == 'single' or config["sampleFORMAT"] == 'csv':
+        # 1.A.1 For list of samples, if sample name in file name, return sample name. .
+        for sample in config["sample"]:
+            if sample in outputFileName:
+                return sample
+    # 1.B - Process if pair
+    elif config["sampleFORMAT"] == 'pair':
+        # 1.B.1 - For list of paired samples, if paired sample name in file name, return paired sample name.
+        for sample in pandas.read_table(config["sampleFILE"], " ").iterrows():
+            nameTumorNormal= sample[1]["tumor"] + '_' + sample[1]["normal"]
+            if str(nameTumorNormal) in str(outputFileName):
+                return nameTumorNormal
+    # 1.C - Process on error.
+    else:
+        print("**Error** Sample name unable to be parsed from file name")
+        return "getSampleNameFailed"
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule getVcfTable:
+    input:
+        inputVCF = "{pathGVCFT}/{sampleGVCFT}.vcf"
+    output:
+        outputTXT = "{pathGVCFT}/tables/{sampleGVCFT}.txt"
+    params:
+        allVcfFields = getVcfFields()
+    log:
+        stdErr_OnePerLine = "log/" + config["vcfUtilDIR"] + '/vcfGetTable_annotateVcfDIR/vcfGetTable_annotateVcfDIR_{wildcards.sampleVCFGT}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.OnePerLine.stderr',
+        stdErr = "log/" + config["vcfUtilDIR"] + '/vcfGetTable_annotateVcfDIR/vcfGetTable_annotateVcfDIR_{wildcards.sampleVCFGT}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run:
+        # 1.A - Open and begin working with the intended output target.
+        with open(str(output.outputTXT), "w+") as outputTARGET:
+
+            # 1.A.1 - If flag set, will pipe input through Perl Script.
+            if config["OnePerLineFLAG"] == True:
+                callString="cat " + str(input.inputVCF) + " | " + config["vcfUtil_vcfEffOnePerLineProg"] \
+                + " | " + config["vcfUtil_javaProg"] + ' ' + config["vcfUtil_snpSiftProg"] \
+                + ' extractFields - ' + str(params.allVcfFields) + ' ' + " ".join(config["effFields"])
+
+                # 1.A.1.1 - Differing output redirection as when not on cluster we cannot use the cluster config file.
+                if config["offCluster"]:
+                    callString += ' 2> ' + str(log.stdErr_OnePerLine)
+        
+            # 1.A.2 - If flag not set, will not pipe input through Perl Script.
+            else:
+                callString=config["vcfUtil_javaProg"] + ' ' + config["vcfUtil_snpSiftProg"] \
+                + ' extractFields ' + str(input.inputVCF) + ' ' + str(params.allVcfFields) + ' ' + " ".join(config["effFields"]) \
+
+                # 1.A.2.1 - Differing output redirection as when not on cluster we cannot use the cluster config file.
+                if config["offCluster"]:
+                    callString += ' 2> ' + str(log.stdErr) + '.stderr'
+
+            # 1.B - Call the function and capture its output to modify each line.
+            call('echo "#' + str(log.stdErr)[:-7] + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+            fileSTREAM = Popen(callString, stdout=PIPE, shell=True)
+
+            # 1.C - Initially read and edit just the first, adding 'SAMPLE' to header line.
+            outputTARGET.write("SAMPLE\t%s" % fileSTREAM.stdout.readline().decode("utf-8").replace("#",""))
+
+            # 1.D - Add the sampleName to each line after the header line, stripping excess whitespace.
+            for line in fileSTREAM.stdout:
+                outputTARGET.write(getSampleName(str(output)) + "\t%s\n" % line.decode("utf-8").strip())

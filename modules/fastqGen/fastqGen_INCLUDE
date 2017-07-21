@@ -1,0 +1,28 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-06-28
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/fastqGen/fastqGen.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+#
+# Purpose: Generate read-direction specific '.fastq' files from a '.bam' file.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+########################################################################################################
+#                                          Usage Guidelines                                            #
+########################################################################################################
+# Due to potential for ambiguity conflicts, as some modules are capable of producing the same output, 
+#   it is important to provide Snakemake with guidance on which rule to chose.
+#
+#   Explanation: Both rules are capable of producing the same output, however, they have vastly 
+#       different input sources. The rule bam2fastq_picard is preferred as first as the generation of 
+#       the '.fastq' files must occurr before they can be merged.
+ruleorder: mergeFASTQ > bam2fastq_picard
+
+########################################################################################################
+#                                  Include all required Snakefiles.                                    #
+########################################################################################################
+
+include: "bam2fastq_picard"
+# bam2fastq - Generation of a pair of '.fastq' files from a '.bam' file. 
+
+########################################################################################################

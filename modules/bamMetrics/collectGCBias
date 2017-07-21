@@ -1,33 +1,55 @@
-#-----------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 # Author:   Tim Boyarski                                    
-# Date:	    2017-05-19                                      
-#-----------------------------------------------------------
+# Date:	    2017-07-07
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 # Call: call("python " + snakeDIR + "/modules/metricsBam/metricsBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
 # Input:                                    .bam   
-# Output:                                   .collectGCBias  
-# Purpose: Generate a multiple metrics for a '.BAM' file. 
-#-----------------------------------------------------------
-from time import gmtime, strftime
-from subprocess import call
+#
+# Output:                                   .collectGCBias.txt
+#
+# Purpose: Generate GCBias data for a '.BAM' file. 
+#
+#   *** NOTE *** Input files are always kept. No way via this 
+#       script to automate their destruction. This was done to
+#       avoid the risk of deleting the original '.BAM' files.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for timestamping the log files.
+from time import localtime, strftime
 
+# Used for system calls.
+from subprocess import call
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
 rule collectGCBias:
     input:
-        expand("{outputDIR}/{bamDIR}/{{sampleCGCB}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
+        bamFile=expand("{outputDIR}/{bamDIR}/{{sampleCGCB}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"]),
+        refGenome=config["refFILE"]
     output:
-        expand("{outputDIR}/{metricsDIR}/{{sampleCGCB}}.collectGCBias.txt", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
+        txtFile=expand("{outputDIR}/{metricsDIR}/{{sampleCGCB}}.collectGCBias.txt", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
     params:
         outputSuffix=config["outputDIR"] + '/' + config["metricsDIR"] + '/{sampleCGCB}.collectGCBias',
-        baseARGS=config["bamMetricsPicardValStringency"] + ' ' + config["bamMetricsPicardMexRec"],
-        refLOC=config["inputDIR"] + '/' + config["refDIR"] + '/' + config["refFILE"],
-        logNAME="collectGCBias." + strftime("%Y-%m-%d.%H-%M-%S", gmtime())
+        baseARGS=config["bamMetricsPicardValStringency"] + ' ' + config["bamMetricsPicardMexRec"]
     log:
-        "log/" + config["bamMetricsDIR"] + "/collectGCBias"
+        stdErr = "log/" + config["bamMetricsDIR"] + '/collectGCBias/collectGCBias_{sampleCGCB}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
     run: 
+        # 1.A Base call string.
         callString=config["bamMetrics_picardProg"] + ' CollectGcBiasMetrics ' + str(params.baseARGS) \
-        + ' I=' + str(input) + ' O=' + str(output) + ' REFERENCE_SEQUENCE=' + str(params.refLOC) \
-        + ' CHART_OUTPUT=' + str(output)[:-4] + '.pdf' \
-        + ' SUMMARY_OUTPUT=' + str(output) \
-        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
-        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        + ' I=' + str(input.bamFile) + ' O=' + str(output.txtFile) + ' REFERENCE_SEQUENCE=' + str(input.refGenome) \
+        + ' CHART_OUTPUT=' + str(output.txtFile)[:-4] + '.pdf' \
+        + ' SUMMARY_OUTPUT=' + str(output.txtFile)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+
+        # 2.A - Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr) + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
         call(callString, shell=True)
-#-------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,40 +1,83 @@
-#-----------------------------------------------------------
-# Author:   Tim Boyarski                                    
-# Date:	    2017-05-19                                      
-#-----------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-07-07
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 # Call: call("python " + snakeDIR + "/modules/metricsBam/metricsBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
 # Input:                                    .bam   
-# Output:                                   .collectRNASeq
-# Purpose: Generate a multiple metrics for a '.BAM' file. 
-# **** MISSING INTERVAL LIST TOOL! ****
-#-----------------------------------------------------------
-from time import gmtime, strftime
-import subprocess
+#
+# Output:                                   .collectRNASeq.txt
+#
+# Purpose: Generate RNASeq data for a '.BAM' file. 
+#
+#   *** NOTE *** Input files are always kept. No way via this 
+#       script to automate their destruction. This was done to
+#       avoid the risk of deleting the '.BAM' files.
+#
+#   **NOTE** The reference files for this module are not 
+#       generated from a consistent reference genome.
+#       This likely needs to be fixed.
+#
+#       The alignment genome is GRCh37-lite, but there is no corresponding refFlat file.
+#       Using hg19 refFlat file instead.
+#
+#          #RRNAIntervalList="RRNAIntervalList: /extscratch/clc/references/rRNA.ensg72.hg19.interval_list\n"
+#          RRNAIntervalList="RRNAIntervalList: /extscratch/clc/references/dbsnp/dbsnp_137.b37.interval_list\n"
+#          RefFlat="RefFlat: /extscratch/clc/references/refseq.hg19.refFlat\n"
+#          StrandSpecificity="StrandSpecificity: NONE\n"
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for timestamping the log files.
+from time import localtime, strftime
 
+# Used for system calls.
+from subprocess import call
+
+# Used for the mock process substitution
+from tempfile import NamedTemporaryFile
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#------------------
 rule collectRNASeq:
     input:
-        expand("{outputDIR}/{bamDIR}/{{sampleCRNAS}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
+        bamFILE = expand("{outputDIR}/{bamDIR}/{{sampleCRNAS}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"]),
+        intervalList = config["RRNAIntervalList"],
+        refFlat = config["RefFlat"],
+        refGenome = config["refFILE"]
     output:
         expand("{outputDIR}/{metricsDIR}/{{sampleCRNAS}}.collectRNASeq.txt", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
     params:
-        baseARGS=config["bamMetricsPicardValStringency"] + ' ' + config["bamMetricsPicardMexRec"],
-        refLOC=config["inputDIR"] + '/' + config["refDIR"] + '/' + config["refFILE"],
-        logNAME="collectRNASeq." + strftime("%Y-%m-%d.%H-%M-%S", gmtime())
+        baseARGS = config["bamMetricsPicardValStringency"] + ' ' + config["bamMetricsPicardMexRec"],
+        logNAME = "collectRNASeq." + strftime("%Y-%m-%d.%H-%M-%S", localtime())
     log:
         "log/" + config["bamMetricsDIR"] + "/collectRNASeq"
     run: 
-        # Provide read groups as an input stream
-        readGroupsCallString=config["bamMetrics_samtoolsProg"] + ' view -H ' + str(input) \
-        + ' | grep -v "@RG" | cat - ' + config["RRNAIntervalList"]
-        rgSTREAM = subprocess.Popen(readGroupsCallString, stdout=subprocess.PIPE, shell=True)
+        # 1.A Pre-processing to generate an up-to-date interval list dervied from one of
+        #       the one of the processing '.bam' files created by the pipeline. 
+        readGroupsCallString = config["bamMetrics_samtoolsProg"] + ' view -H ' + str(input.bamFILE) \
+        + ' | grep -v "@RG" | cat - ' + str(input.intervalList)
 
-        callString=config["bamMetrics_picardProg"] + ' CollectRnaSeqMetrics ' + str(params.baseARGS) \
-        + ' I=' + str(input) + ' O=' + str(output) + ' REFERENCE_SEQUENCE=' + str(params.refLOC) \
-        + ' STRAND_SPECIFICITY=' + config["StrandSpecificity"] \
-        + ' REF_FLAT=' + config["RefFlat"] \
-        + ' CHART_OUTPUT=' + str(output)[:-4] + '.pdf' \
-        + ' ROBOSOMAL_INTERVALS=' + str(rgSTREAM) \
-        + ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
-        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
-        call(callString, shell=True)
+        # 1.B Execute the pre-processing and store it in a temp file.
+        with NamedTemporaryFile() as tempIntervalFILE:
+            call(readGroupsCallString, stdout=tempIntervalFILE, shell=True)
+            
+            # 2.A Base call string.
+            callString = config["bamMetrics_picardProg"] + ' CollectRnaSeqMetrics' \
+            + ' REF_FLAT=' + str(input.refFlat) \
+            + ' CHART_OUTPUT=' + str(output)[:-4] + '.pdf' \
+            + ' I=' + str(input.bamFILE) + ' O=' + str(output) + ' REFERENCE_SEQUENCE=' + str(input.refGenome) \
+            + ' STRAND_SPECIFICITY=' + config["StrandSpecificity"] \
+            + ' RIBOSOMAL_INTERVALS=' + tempIntervalFILE.name
+
+            # 2.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+            if config["offCluster"]:
+                callString += ' 2> ' + str(log) + '/' + str(params.logNAME) + '.stderr'
+
+            # 3.A - Printing system calls to a local file, and then executing them.
+            call('echo "#' + str(params.logNAME) + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+            call(callString, shell=True)
 #-------------------------------------------------------------------------------------------------------

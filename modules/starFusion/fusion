@@ -1,0 +1,143 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-06-14
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/starAligner/starAligner.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    ./{processBamDIR}/junctions/{sample}_junctions.txt   
+#
+# Output:                                   ./{starFusionDIR}/fusions/{sample}_fusions.txt   
+#
+# Purpose: Generate fusion data from the STAR '_junction.txt' files.
+#   
+#   **NOTE** Input files are valuable output from a previous step and cannot
+#       be regenerated from these submodules output. As such, there is no
+#       mechanism to delete the input files within this submodule.
+#
+#   **NOTE** Reference directory variable used, as interpretted from "hg19.inc", 
+#       would not work. As such, an alternative reference directory variable is 
+#       provided, see the notes below. The submodule has since moved directories
+#       from which it was run to produce the output below. Please note, the 
+#       submodule was initially from from a directory called starAligner.
+#
+#   **NOTE** Makefile pathing suggested as below:
+#       -STAR_DIR = $(HOME)/share/references/star/GRCh37
+#       -STAR_REF_DIR = $(STAR_DIR)/ref_genome.fa.star.idx
+#       -STAR_REF_FASTA = $(STAR_DIR)/ref_genome.fa
+#       -STAR_GTF = $(STAR_DIR)/ref_annot.gtf
+#       -STAR_FUSION_REF_DIR = $(STAR_REF_DIR)
+#
+#       This should be interpretted as:
+#       -STAR_REF_DIR = $(HOME)/share/references/star/GRCh37/ref_genome.fa.star.idx
+#       -STAR_FUSION_REF_DIR = $(HOME)/share/references/star/GRCh37/ref_genome.fa.star.idx
+#       
+#       This STAR_FUSION_REF_DIR path provides the error as described below. The program is trying 
+#           to find a file called "ref_annot.gtf" at the reference directory provided.
+#
+#   **NOT WORKING**
+#       Using: --genome_lib_dir /extscratch/clc/references/star/GRCh37/ref_genome.fa.star.idx
+#           * Running CMD: /extscratch/clc/usr/star-fusion/0.7.0/util/STAR-Fusion.predict  -J /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starAligner/ju
+#           nctions/Pfeiffer2_junctions.txt  --genome_lib_dir /extscratch/clc/references/star/GRCh37/ref_genome.fa.star.idx  -O /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/s
+#           tarAligner-1/output/starFusion/Pfeiffer2/star-fusion
+#           Error, cannot locate reference annotation file: /extscratch/clc/references/star/GRCh37/ref_genome.fa.star.idx/ref_annot.gtf at /extscratch/clc/usr/star-fusion/0.7.0/util/STAR-Fusion
+#           .predict line 84.
+#           Error, cmd: /extscratch/clc/usr/star-fusion/0.7.0/util/STAR-Fusion.predict  -J /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starAligner/junct
+#           ions/Pfeiffer2_junctions.txt  --genome_lib_dir /extscratch/clc/references/star/GRCh37/ref_genome.fa.star.idx  -O /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/star
+#           Aligner-1/output/starFusion/Pfeiffer2/star-fusion  died with ret 512 at /extscratch/clc/usr/star-fusion/0.7.0/lib/Pipeliner.pm line 79.
+#               Pipeliner::run('Pipeliner=HASH(0x1b914488)') called at /extscratch/clc/usr/star-fusion/0.7.0/STAR-Fusion line 247
+#           Error in job fusion while creating output files output/starFusion/Pfeiffer2/star-fusion.fusion_candidates.final.abridged, output/starFusion/fusions/Pfeiffer2_fusions.txt.
+#           MissingOutputException in line 52 of /extscratch/clc/projects/tboyarski/gitRepo-LCR-BCCRC/Snakemake/modules/starAligner/fusion:
+#           Missing files after 5 seconds:
+#           output/starFusion/Pfeiffer2/star-fusion.fusion_candidates.final.abridged
+#           output/starFusion/fusions/Pfeiffer2_fusions.txt
+#           This might be due to filesystem latency. If that is the case, consider to increase the wait time with --latency-wait.
+#           Exiting because a job execution failed. Look above for error message
+#
+#   **WORKING**
+#       Using: --genome_lib_dir /extscratch/clc/references/star/GRCh37
+#           * Running CMD: /extscratch/clc/usr/star-fusion/0.7.0/util/STAR-Fusion.predict  -J /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starAligner/ju
+#           nctions/Pfeiffer2_junctions.txt  --genome_lib_dir /extscratch/clc/references/star/GRCh37  -O /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/sta
+#           rFusion/Pfeiffer2/star-fusion
+#           CMD: mkdir -p /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.predict.intermediates_dir
+#           -parsing GTF file: /extscratch/clc/references/star/GRCh37/ref_annot.gtf
+#           -building interval tree for fast searching of gene overlaps
+#           -parsing fusion evidence: /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starAligner/junctions/Pfeiffer2_junctions.txt
+#           -mapping reads to genes
+#           -outputting fusion candidates to file: /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.fusion_candidates.prelim
+#           inary
+#           * Running CMD: /extscratch/clc/usr/star-fusion/0.7.0/util/STAR-Fusion.filter  --fusion_preds /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/sta
+#           rFusion/Pfeiffer2/star-fusion.fusion_candidates.preliminary  -E 0.001  --tmpdir /tmp  --min_junction_reads 1  --min_sum_frags 2  --max_promiscuity 3  --min_novel_junction_support 3
+#            --min_alt_pct_junction 10  --aggregate_novel_junction_dist 5  --genome_lib_dir /extscratch/clc/references/star/GRCh37  --out_prefix /extscratch/clc/projects/tboyarski/RegressionTes
+#           t/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion
+#           CMD: mkdir -p /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.filter.intermediates_dir
+#           CMD: /extscratch/clc/usr/star-fusion/0.7.0/util/../FusionFilter/blast_and_promiscuity_filter.pl --out_prefix /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAlig
+#           ner-1/output/starFusion/Pfeiffer2/star-fusion.filter.intermediates_dir/star-fusion -E 0.001 --max_promiscuity 3 --fusion_preds /extscratch/clc/projects/tboyarski/RegressionTest/7-st
+#           arAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.filter.intermediates_dir/star-fusion.pre_blast_filter --genome_lib_dir /extscratch/clc/references/star/GRCh37
+#           CMD: /extscratch/clc/usr/star-fusion/0.7.0/FusionFilter/util/blast_filter.pl --fusion_preds /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/star
+#           Fusion/Pfeiffer2/star-fusion.filter.intermediates_dir/star-fusion.pre_blast_filter -E 0.001 --genome_lib_dir /extscratch/clc/references/star/GRCh37
+#           CMD: /extscratch/clc/usr/star-fusion/0.7.0/FusionFilter/util/promiscuity_filter.pl --fusion_preds /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/outpu
+#           t/starFusion/Pfeiffer2/star-fusion.filter.intermediates_dir/star-fusion.pre_blast_filter.post_blast_filter  --max_promiscuity 3  --min_pct_dom_promiscuity 20
+#           CMD: cp /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.filter.intermediates_dir/star-fusion.pre_blast_filter.p
+#           ost_blast_filter.post_promisc_filter /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.filter.intermediates_dir/s
+#           tar-fusion.final
+#           CMD: cut -f1-8,11-100 /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.filter.intermediates_dir/star-fusion.pre_
+#           blast_filter > /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.filter.intermediates_dir/star-fusion.pre_blast_f
+#           ilter.abridged
+#           CMD: cut -f1-8,11-100 /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.filter.intermediates_dir/star-fusion.pre_
+#           blast_filter.filt_info > /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.filter.intermediates_dir/star-fusion.p
+#           re_blast_filter.filt_info.abridged
+#           CMD: cut -f1-8,11-100 /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.fusion_candidates.final > /extscratch/clc
+#           /projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.fusion_candidates.final.abridged
+#           CMD: cut -f1-8,11-100 /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.filter.intermediates_dir/star-fusion.pre_
+#           blast_filter.post_blast_filter.post_promisc_filter > /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.filter.int
+#           ermediates_dir/star-fusion.pre_blast_filter.post_blast_filter.post_promisc_filter.abridged
+#           
+#           
+#               * Process complete.  See output: /extscratch/clc/projects/tboyarski/RegressionTest/7-starAligner/starAligner-1/output/starFusion/Pfeiffer2/star-fusion.fusion_candidates.fina
+#           l (or .abridged version)
+#           
+#           
+#           touch: invalid option -- h
+#           Try `touch --help' for more information.
+#           Unable to set utime on symlink output/starFusion/fusions/Pfeiffer2_fusions.txt. Your Python build does not support it.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used for system calls.
+from subprocess import call
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule fusion:
+    input:
+        inputJunction = expand("{outputDIR}/{bamDIR}/junctions/{{sampleSAF}}_junctions.txt", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"]),
+        refGenome = config["fusionRefGenomeDIR"]
+    output:
+        outputFusion = expand("{outputDIR}/{starFusionDIR}/{{sampleSAF}}/star-fusion.fusion_candidates.final.abridged", outputDIR=config["outputDIR"], starFusionDIR=config["starFusionDIR"]),
+        symLinkedFusion = expand("{outputDIR}/{starFusionDIR}/fusions/{{sampleSAF}}_fusions.txt", outputDIR=config["outputDIR"], starFusionDIR=config["starFusionDIR"])
+    params:
+        outputDirName=config["outputDIR"] + '/' + config["starFusionDIR"]
+    log:
+        stdErr = "log/" + config["starFusionDIR"] + '/starFusion/fusion_{sampleSAF}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run: 
+        # 1.A Base call string.
+        callString = config["starFusion_starFusionProg"] + ' --genome_lib_dir ' + str(input.refGenome) + ' -J ' + str(input.inputJunction) \
+        + ' --output_dir ' + str(params.outputDirName) + '/' + wildcards.sampleSAF
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+        
+        # 1.C - Creating a symlink of the finalized output to be placed in a different directory.
+        callString += ' && ln -fs ' + getcwd() + '/' + str(output.outputFusion) + ' ' + getcwd() + '/' + str(output.symLinkedFusion)
+
+        # 2.A - Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr) + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

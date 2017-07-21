@@ -1,0 +1,96 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-06-12
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/bamGen/bamGen.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    {sample}.bam   
+#
+# Output:                                   {sample}_junctions.txt   
+#
+# Purpose: Generate an Aligned '.bam' file from a pair of '.fastq' files. Also
+#   produces additional output data files regarding various data metrics.
+#
+#   **NOTE** An expanded file list is used to generate list all of the outputs.
+#       The following index values can be used to access each respective file.
+#       The first file is the symlinked 'junctions.txt' file. The rest are listed
+#       before for your convenience.
+#               output[0] = '_Chimeric.out.sam'
+#               output[1] = '_Log.final.out'
+#               output[2] = '_Log.out'
+#               output[3] = '_Log.progress.out'
+#               output[4] = '_ReadsPerGene.out.tab'
+#               output[5] = '_SJ.out.tab']
+#
+#   **NOTE** _Aligned.out.bam is listed explicitly as an output due to it's
+#       it's significance in larger pipeline series. Please note that it
+#       is listed for explicit convenience, and it is not referenced or 
+#       used elsewhere within this submodule.
+#
+#   **NOTE** This submodule has excessive memory requirements. Ensure the 
+#       JSON config cluster submission is for 4 Cores at 8GB each.
+#               E.g. "-l h_vmem=8G -pe ncpus 4"
+#
+#   **NOTE** During regression testings, during the "loading genome step", the 
+#       program would hang. It produces no errors, but does not seem able to 
+#       progress beyond that point. Not the following timings, loading the 
+#       genome should not take more than 5 minutes. Check the log files to see
+#       that alignBAM_star has progress past this point:
+#           Jun 21 13:34:41 ..... loading genome
+#           Jun 21 13:35:22 ..... processing annotations GTF
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used for system calls.
+from subprocess import call
+
+# Used to get current working directory
+from os import getcwd
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule bamALIGN_star:
+    input:
+        fastqGzPair = expand("{outputDIR}/{fastqDIR}/{{sampleBAS}}.{readDirection}.fastq.gz", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], readDirection=["1","2"]),
+        refGenomeFile = config["starRefGenomeDIR"],
+        sjdbFile = config["sjdbGTFfile"]
+    output:
+        junctionsTXT = expand("{outputDIR}/{bamDIR}/junctions/{{sampleBAS}}_junctions.txt", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"]),
+        alignedOutBam = temp(expand("{outputDIR}/{bamDIR}/{{sampleBAS}}_Aligned.out.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])),
+        chimericOutJunction = expand("{outputDIR}/{bamDIR}/{{sampleBAS}}_Chimeric.out.junction", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"]),
+        additionalOutput = expand("{outputDIR}/{bamDIR}/{{sampleBAS}}{outputSuffixLIST_star}", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], outputSuffixLIST_star=config["outputSuffixLIST_star"])
+    params:
+        baseARGS = config["runThreadN"]+' ' \
+            + ' --genomeDir ' + config["starRefGenomeDIR"]+' ' \
+            +config["readFilesCommand"]+' ' \
+            +config["outSAMtype"]+' ' \
+            +config["outSAMunmapped"]+' ' \
+            +config["quantMode"]+' ' \
+            + ' --sjdbGTFfile ' + config["sjdbGTFfile"]+' ' \
+            +config["chimSegmentMin"]+' ' \
+            +config["outSAMstrandField"],
+        outFileNamePrefixDIR = config["outputDIR"]+'/'+config["bamDIR"],
+    log:
+        stdErr = "log/" + config["bamGenDIR"] + '/alignBAM_star/alignBAM_star_{sampleBAS}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run: 
+        # 1.A Base call string.
+        callString = config["bamGen_starProg"] + ' ' + str(params.baseARGS) + ' --readFilesIn ' + str(input.fastqGzPair) \
+        + ' --outFileNamePrefix ' + str(params.outFileNamePrefixDIR) + '/' + wildcards.sampleBAS + '_'
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+
+        # 1.C - Creating a symlink of the finalized output to be placed in a different directory.
+        callString += ' && ln -fs ' + getcwd() + '/' + str(output.chimericOutJunction) + ' ' + getcwd() + '/' + str(output.junctionsTXT)
+
+        # 2.A - Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr)[:-7] + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

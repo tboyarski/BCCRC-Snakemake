@@ -1,0 +1,64 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-07-05
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/vcfAnnotate/vcfAnnotate.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .vcf
+
+# Output:                                   .indel_annotated.vcf
+
+# Purpose: Annotate a '.VCF' file via indel form.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for system calls.
+from subprocess import call
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule indel:
+    input:
+        inputVCF = "{pathIndel}/{sampleIndel}.vcf"
+    output:
+        outputVCF = "{pathIndel}/{sampleIndel}.indel_annotated.vcf"
+    log:
+        stdErr_1000g = "log/" + config["vcfAnnotateDIR"] + '/indel/indel_{sampleIndel}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.1000g.log',
+        stdErr_Mills1000g = "log/" + config["vcfAnnotateDIR"] + '/indel/indel_{sampleIndel}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.mills_100g.log',
+        stdErr_dbsnp = "log/" + config["vcfAnnotateDIR"] + '/indel/indel_{sampleIndel}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + 'dbsnp.stderr'
+    run:
+        # 1.A - Base call string.
+        callString=config["vcfAnnotate_javaProg"] + ' ' + config["vcfAnnotate_snpSiftProg"] + ' annotate -id ' \
+        + config["knownIndel1000G"] + ' ' + str(input.inputVCF)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr_1000g)
+
+        # 1.C - Piping of data into a secondary annotation process.
+        callString += ' | ' + config["vcfAnnotate_javaProg"] + ' ' + config["vcfAnnotate_snpSiftProg"] + ' annotate -id ' \
+        + config["knownIndelMills1000G"] + ' -'
+        
+        # 1.D - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr_Mills1000g)
+        
+        # 1.E - Piping of data into a tertiary annotation process.
+        callString += ' | ' + config["vcfAnnotate_javaProg"] + ' ' + config["vcfAnnotate_snpSiftProg"] + ' annotate -id ' \
+        + config["annotateDbSnp"] + ' - > ' + str(output.outputVCF)
+        
+        # 1.F - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr_dbsbp)
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr_1000g) + ' ' + str(log.stdErr_Mills1000g) + ' ' + str(log.stdErr_dbsnp) + ' ' \
+        + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

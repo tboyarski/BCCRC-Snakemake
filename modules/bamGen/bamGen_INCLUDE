@@ -1,0 +1,38 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-07-10
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/bamGen/bamGen.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+#
+# Purpose: Create an aligned '.bam' file from '.fastq' files.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+########################################################################################################
+#                                          Usage Guidelines                                            #
+########################################################################################################
+# Due to potential for ambiguity conflicts, as some modules are capable of producing the same output,
+#   it is important to provide Snakemake with guidance on which rule to chose.
+#
+#   Explanation: Both rules are capable of producing the same output, however, they have vastly
+#       different input sources. The rule bamALIGN_star rule is preferred as typically the user will be 
+#       generating their aligned '.bam' file from paired '.fastq' reads, and not a '.sam' file.
+#           -See line(s) 33 & 37
+#
+
+########################################################################################################
+#                                  Include all required Snakefiles.                                    #
+########################################################################################################
+
+if config["SoftwareChoiceFLAG_alignBAM"] == "STAR":
+    include: "bamALIGN_star"
+    # alignBAM_star - Generation of a '.bam' file from paired '.fastq' files, via STAR.
+    ruleorder: bamALIGN_star > sam2BAM
+else:
+    include: "bamALIGN_bwa"
+    # alignBAM_bwa - Generation of a '.bam' file from paired '.fastq' files, via BWA
+    ruleorder: bamALIGN_bwa > sam2BAM
+
+include: "sam2BAM"
+# sam2BAM - Generation of a '.sam' file from a '.bam' file, via STAR.
+
+########################################################################################################

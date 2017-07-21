@@ -1,43 +1,93 @@
-#-----------------------------------------------------------
-# Author:   Tim Boyarski                                    
-# Date:	    2017-03-28                                      
-#-----------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-06-28
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 # Call: call("python " + snakeDIR + "/modules/XXXXXXXX/XXXXXXXX.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
 # Input:                                    .XXXXXXXX   
+#
 # Output:                                   .XXXXXXXX   
+#
 # Purpose: Generate an XXXXXXXX.
-#-----------------------------------------------------------
-from time import gmtime, strftime
+#
+#   **NOTE** Something special can be written here. The must be under 150 characters, typically stick to 
+#       ~80 characters, as the human eye finds it difficult to track lines longer than this length. Also,
+#       indent after the first line.
+#       Code line length article: https://baymard.com/blog/line-length-readability
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used for system calls.
 from subprocess import call
 
+# Eliminate ambiguity as sometimes two rules can both produce the same output. 
+ruleorder: templateRule1 > templateRule2
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+##################################################
+# function_name
+##################################################
+# Function should be properly described here. Try to keep these
+#   test lines shorted, and indent after the first line. 
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+def function_name():
+    # Declar variables
+    temp = []
+
+    # Start doing things
+    print("Hello world")
+
+    # Return if nescessary, usually it is.
+    return temp
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
 rule XXXXXXXX:
     input:
-        expand("{outputDIR}/{XXXXXXXX}/{{samples}}.XXXXXXXX", outputDIR=config["outputDIR"], XXXXXXXX=config["XXXXXXXX"])
+        # You may or may not want to have the input files marked as temp. If they are marked as temp, they will be deleted when no longer needed.
+        inputFile = temp(expand("{outputDIR}/{XXXXXXXX}/{{sampleXX}}.XXXXXXXX", outputDIR=config["outputDIR"], XXXXXXXX=config["XXXXXXXX"]))
     output:
-        temp(expand("{outputDIR}/{XXXXXXXX}/{{samples}}.XXXXXXXX", outputDIR=config["outputDIR"], XXXXXXXX=config["XXXXXXXX"]))
+        outputFile = expand("{outputDIR}/{XXXXXXXX}/{{sampleXX}}.XXXXXXXX", outputDIR=config["outputDIR"], XXXXXXXX=config["XXXXXXXX"])
+    wildcard_contraints:
+        # Wildcard constraints are critical when preventing cyclical dependencies. E.g:
+        # Wildcard cannot contain a '_'; this prevents cyclical dependencies.
+        sampleXX = config["sampleREGEX"]
     params:
-        logNAME="XXXXXXXX." + strftime("%Y-%m-%d.%H-%M-%S", gmtime()),
         XXXXXXXX="XXXXXXXX" + " " + "XXXXXXXX" + " " + "XXXXXXXX"
     log:
-        "log/" + config["XXXXXXXX"]
+        stdErr = "log/" + config["XXXXXXXXDIR"] + '/XXXXXXXX/XXXXXXX_{samples}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
     run: 
-        call("XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX" + str(params.XXXXXXXX) + config["yamlParamter"] \
-        + " 2> " + str(log) + "/" + str(params.logNAME), shell=True)
-#-------------------------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------------------------
-#
-#
+        # 1.A Base call string.
+        callString = config["XXX"] + ' I=' + str(input.inputFile) + ' O=' + str(output.outputFile) + wildcards.sampleXX
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+
+        # 2.A - Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr)[:-7] + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# ADDITIONAL HELPER EXAMPLES #
+# ----------------------------
 # For symlinking, look at this code from reBam/indexBAM. To be used by the last module if it is creating a differently named file.
 #        "samtools index {input} {output} " \
 #        "&& ln -fs $(pwd)/{output[0]} $(pwd)/{params.bamDIR}/{wildcards.samples}.bam.bai " \
 #        "&& ln -fs $(pwd)/{input} $(pwd)/{params.bamDIR}/{wildcards.samples}.bam"
 #        "bamsort SO=coordinate tmpfile={output}.tmp > {output}"
 #
-#-------------------------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------------------------
-#
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 # When you need to use the YAML configuration variables inside if your input function.
 #
 #def varScanSplit(wildcards):
@@ -51,6 +101,14 @@ rule XXXXXXXX:
 #         # Function to determine the inputs depending on if split chromosome or not, wildcards is implicitly passed as an agrument.
 #         varScanSplit
 #
-#-------------------------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# This is my take on performing process substitution in python.
+#  It is not as efficient, but at least the file is kept in local memory and it is deleted after.
+#
+#         # Provide read groups as an input stream
+#         readGroupsCallString=config["bamMetrics_samtoolsProg"] + ' view -H ' + str(input.bamFILE) \
+#         + ' | grep -v "@RG" | cat - ' + str(input.intervalList)
+#
+#         with tempfile.NamedTemporaryFile() as tempIntervalFILE:
+#             call(readGroupsCallString, stdout=tempIntervalFILE, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

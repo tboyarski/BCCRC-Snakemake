@@ -1,0 +1,48 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                        
+# Date:	    2017-06-28
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/bamUtil/bamUtil.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                            {sample}.bam
+#
+# Output:                                           {sample}_markdup.bam 
+#                                                   {sample}.dup_metrics
+#
+# Purpose: Produce a metrics file with the marked duplicated and
+#   also marks them in the '.bam' file.                            
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used for system calls.
+from subprocess import call
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule markdupBAM:
+    input:
+        inputBAM = expand("{{outputDIR}}/{bamDIR}/{{sampleMDB}}.bam", bamDIR=config["bamDIR"])
+    output:
+        markdupBAM = temp(expand("{{outputDIR}}/{bamDIR}/{{sampleMDB}}_markdup.bam", bamDIR=config["bamDIR"])),
+        markdupMetrics = temp(expand("{{outputDIR}}/{metricsDIR}/{{sampleMDB}}.dup_metrics", metricsDIR=config["metricsDIR"]))
+    log:
+        stdErr = "log/" + config["bamUtilDIR"] + '/markdupBAM/markdupBAM_{sampleMDB}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.biobammarkdup.stderr'
+    run:
+        # 1.A Base call string.
+        callString = config["bamUtil_bammarkduplicates2Prog"] + ' I=' + str(input.inputBAM) + ' O=' + str(output.markdupBAM) \
+        + ' M=' + str(output.markdupMetrics) + ' ' + config["compressLevel"]
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+
+        # 2.A - Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr)[:-21] + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

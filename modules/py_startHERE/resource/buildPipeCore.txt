@@ -1,0 +1,38 @@
+# PYTHON PACKAGES #
+#-------------------
+# Required library to make shell calls.
+from subprocess import call
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# LOCAL VARIABLES #
+#-------------------
+# Formatting of the sample file.
+TYPE="single"
+
+# Creating a relative variable for the sample file.
+SAMPLE="input/sampleFILE" + TYPE + ".txt"
+
+
+# ***************************************************************************************
+# *************************************** WARNING ***************************************
+# ***************************************************************************************
+#
+# Store the absolute path of the reference genome file.
+#
+# Generic GRCh37 Genome Reference:
+#REFFILE="/reference/genomes/9606/hg19a/genome/GRCh37-lite.fa"
+#
+# BWA Alignement GRCh37 Genome Reference:
+REFFILE="/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa"
+
+# ***************************************************************************************
+# *************************************** WARNING ***************************************
+# ***************************************************************************************
+
+# Path and name of the YAML Snakemake pipeline configuration file.
+YAMLFILE="input/config.yaml"
+
+# Path and name of the JSON Snakemake pipeline cluster configuration file.
+CLUSTERFILE="input/config.json"
+
+# Path and name of the Snakefile for respective pipeline project.
+SNAKEFILE="Snakefile"

@@ -1,0 +1,68 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-06-28
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/mpileup/mpileup.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .bam
+#
+# Output:                                   .mpileup        
+#
+# Purpose: Generate an '.mpileup' file from a '.bam' file.  
+#
+#   **NOTE** Input files are always kept. No way via this
+#     script to automate their destruction. This was done to
+#     avoid the risk of deleting the processed '.bam' files.
+#
+#   **NOTE** Wilcard constraints may prevent some sample names
+#       from being used.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for system calls.
+from subprocess import call
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule bam2mpileup:
+    input:
+        inputBAM = expand("{outputDIR}/{bamDIR}/{{sampleB2M}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"]),
+        inputBAI = expand("{outputDIR}/{bamDIR}/{{sampleB2M}}.bam.bai", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"]),
+        refFile = config["refFILE"]
+    output:
+        outputMpileup = temp(expand("{outputDIR}/{mpileupDIR}/{{sampleB2M}}{{chrB2M}}.mpileup", outputDIR=config["outputDIR"], mpileupDIR=config["mpileupDIR"]))
+    wildcard_constraints:
+        # Constrain the wildcard to not start with '-' '_' or '\', must be comprised of only letters and numbers
+        sampleB2M = config["sampleREGEX"],
+        # May or may not start with _, then consists of any number of letter, number or _, and must finish with a '.' AND a digit, or no '.' AND a digit
+        chrB2M = config["chrREGEX"]
+    params:
+        mpileupARGS=config["countOrphan"] + " " + config["noBaq"] + " " + config["maxDepth"] + " " + config["mapQuality"] + " " + config["bedFILE"]
+    log:
+        stdErr_mpileup = "log/" + config["mpileupGenDIR"] + '/bam2mpileup/bam2mpileup_{sampleB2M}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.mpileup.stderr',
+        stdErr_view = "log/" + config["mpileupGenDIR"] + '/bam2mpileup/bam2mpileup_{sampleB2M}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.view.stderr'
+    run:
+        # 1.A - View input via Samtools.
+        callString=config["mpileup_samtoolsProg"] + ' view -bh -F ' + str(config["bitFlag"]) + ' ' + str(input.inputBAM) + ' ' + wildcards.chrB2M[1:] 
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr_view)
+
+        # 1.C - Process into mpileup.
+        callString += ' | ' + config["mpileup_samtoolsProg"] + ' mpileup ' + str(params.mpileupARGS) + ' -f ' + str(input.refFile) + ' - > ' + str(output.outputMpileup)
+
+        # 1.D - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr_mpileup)
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr_view)[:-12] + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

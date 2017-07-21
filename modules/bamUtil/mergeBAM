@@ -1,0 +1,113 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-06-30
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/utils/utils/utils.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                            1.bam
+#                                                   ...
+#                                                   n.bam
+#
+# Output:                                           X.bam 
+#
+# Purpose: Produce a single '.bam' file from a list of 
+#   '.bam' files. 
+#
+#  **NOTE** This requires that the input '.bam' files are sorted 
+#       by chromosome.
+#       
+#  **NOTE** To switch between Pre- and Post-Fastq merges, switch
+#       between the following YAML config variables:
+#       -PreFastqMerge
+#           bamMergeRootDIR: input/rawBam
+#           bamMergeSuffix: ''
+#       -PostFastqMerge
+#           bamMergeRootDIR: output/processBam
+#           bamMergeSuffix: _Aligned.out
+#
+#   **NOTE** Determination of the number of parts for each
+#       sample is determined from file. The following file
+#       is read and used as the guideline for mergeing both
+#       '.fastq' or '.bam files.
+#           -input/inputPartList.txt:
+#               sampleName partName
+#               Pfeiffer2 Part1-
+#               Pfeiffer2 Part2-
+#               Pfeiffer2 Part3-
+#               Pfeiffer2 Part4-
+#               Pfeiffer3 Part1-
+#               Pfeiffer3 Part2-
+#               Pfeiffer3 Part3-
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for system calls.
+from subprocess import call
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used for the mock process substitution
+from tempfile import NamedTemporaryFile
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+##################################################
+# mergeBAM_getInputFileList
+##################################################
+# Function opens the input parts file as described in the YAML. It takes the 
+#   paired value formatting and generates a list of sample files for all the 
+#   lines which contain the sample name. I was unable to get working the 
+#   pandas tumor-normal pairings to work. This is becuase I have to use
+#   an implicit wildcard for the output, and with that output sample name 
+#   we then find and list all the respective parts. 
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+def mergeBAM_getInputFileList(wildcards):
+    fileList = []
+    with open(config["inputPartList"], 'r+') as inputPartFile:
+        for line in inputPartFile:
+            # Split each line to remove whitespace and generate the following:
+            # [0] = groupName
+            # [1] = fileName
+            lineArray = line.split(' ')
+            if lineArray[0] == str(wildcards.sampleMB):
+                fileList.append(config["bamMergeRootDIR"] + "/" + lineArray[1].strip() + config["bamMergeSuffix"] + ".bam")
+    # Prevent the function from returning an empty string.
+    if len(fileList) == 0:
+        return "mergeBAM function call - No Files Found"
+    else:
+        return unpack(fileList)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule mergeBAM:
+    input:
+        inputFileList = mergeBAM_getInputFileList
+    output:
+        mergedBAM = temp(expand("{bamMergeRootDIR}/{{sampleMB}}{bamMergeSuffix}.bam", bamMergeRootDIR=config["bamMergeRootDIR"], bamMergeSuffix=config["bamMergeSuffix"]))
+    wildcard_constraints:
+        # Wildcard cannot contain a '-'; this prevents cyclical dependencies.
+        # This must reflect the delimiter used in "partName"
+        sampleMB = config["sampleREGEX"]
+    log:
+        stdErr = "log/" + config["bamUtilDIR"] + '/mergeBAM/mergeBAM.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run:
+        # 1.A Create a '.sam' file to parse the header from
+        with NamedTemporaryFile(delete=False) as inputSourceObject:
+            call(config["bamUtil_samtoolsProg"] + " view -H " + str(input.inputFileList[0]), stdout=inputSourceObject, shell=True)
+
+        # 1.B - Base call string.
+        callString=config["bamUtil_samtoolsProg"] + ' merge -f -h ' + inputSourceObject.name + ' ' + str(output.mergedBAM) + ' ' + str(input.inputFileList)
+        
+        # 1.C - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr)[:-7] + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

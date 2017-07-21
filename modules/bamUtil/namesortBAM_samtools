@@ -1,0 +1,48 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:	    2017-06-19
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/bamUtil/bamUtil.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                            {sample}.bam
+#
+# Output:                                           {sample}_namesort.bam
+#
+# Purpose: Produce a name sorted '.BAM' file using biobambam.   
+#
+#   **NOTE** Here is the call string for samtools v0.1.18
+#   callString=config["bamUtil_samtoolsProg"] + ' sort -on -m ' + str(config["samtoolsSortMem"]) \
+#   + ' ' + str(input.inputBAM) + ' tempfile > ' + str(output.namesortBAM)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for system calls.
+from subprocess import call
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule namesortBAM_samtools:
+    input:
+        inputBAM = "{pathNSBS}/{sampleNSBS}.bam"
+    output:
+        namesortBAM = temp("{pathNSBS}/{sampleNSBS}_namesort.bam")
+    log:
+        stdErr = "log/" + config["bamDIR"] + '/namesortBAM_samtools/namesortBAM_samtools_{sampleNSBS}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.samtools.stderr'
+    run:
+        # 1.A Base call string.
+        callString=config["bamUtil_samtoolsProg"] + ' sort -on -m ' + str(config["samtoolsSortMem"]) + ' ' + str(input.inputBAM) + ' tempfile > ' + str(output.namesortBAM)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr)[:-16] + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,44 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:     2017-06-16
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + ROOT_PATH + "/modules/vcfGenUtil_varScan/vcfGenUtil_varScan.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .varScan.copynumber  
+#
+# Output:                                   .varScan.copycall
+#
+# Purpose: Infer somatic copy number changes using data from matched tumor-normal pairs.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used for system calls.
+from subprocess import call
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule copycall:
+    input:
+        inputCopyNum = expand("{outputDIR}/{vcfGenUtil_varScanDIR}/{{sampletCC}}_{{samplenCC}}.varScan.copynumber", outputDIR=config["outputDIR"], vcfGenUtil_varScanDIR=config["vcfGenUtil_varScanDIR"])
+    output:
+        outputCopyCall = expand("{outputDIR}/{vcfGenUtil_varScanDIR}/{{sampletCC}}_{{samplenCC}}.varScan.copycall", outputDIR=config["outputDIR"], vcfGenUtil_varScanDIR=config["vcfGenUtil_varScanDIR"])
+    log:
+        stdErr = "log/" + config["vcfGenUtil_varScanDIR"] + '/copycall/copycall_{sampletCC}_{samplenCC}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run:
+        # 1.A - Base call string.
+        callString=config["vcfGenUtil_varScan_varScanProg"] + ' copyCaller ' + str(input.inputCopyNum) + ' --output-file ' + str(output.outputCopyCall)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+
+         # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr) + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

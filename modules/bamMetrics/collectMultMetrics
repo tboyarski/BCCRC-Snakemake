@@ -1,31 +1,61 @@
-#-----------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 # Author:   Tim Boyarski                                    
-# Date:	    2017-05-19                                      
-#-----------------------------------------------------------
+# Date:	    2017-07-07
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 # Call: call("python " + snakeDIR + "/modules/metricsBam/metricsBam.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
 # Input:                                    .bam   
-# Output:                                   .collectMultMetrics
-# Purpose: Generate a multiple metrics for a '.BAM' file. 
-#-----------------------------------------------------------
-from time import gmtime, strftime
-from subprocess import call
+#
+# Output:                                   .collectMultMetrics.alignment_summary_metrics
+#                                           .collectMultMetrics.base_distribution_by_cycle_metrics
+#                                           .collectMultMetrics.base_distribution_by_cycle.pdf
+#                                           .collectMultMetrics.insert_size_histogram.pdf
+#                                           .collectMultMetrics.insert_size_metrics
+#                                           .collectMultMetrics.quality_by_cycle_metrics
+#                                           .collectMultMetrics.quality_by_cycle.pdf
+#                                           .collectMultMetrics.quality_distribution_metrics
+#                                           .collectMultMetrics.quality_distribution.pdf
+#
+# Purpose: Generate multiple metrics for a '.BAM' file. 
+#
+#   *** NOTE *** Input files are always kept. No way via this 
+#       script to automate their destruction. This was done to
+#       avoid the risk of deleting the original '.BAM' files.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for timestamping the log files.
+from time import localtime, strftime
 
+# Used for system calls.
+from subprocess import call
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#------------------
 rule collectMultMetrics:
     input:
-        expand("{outputDIR}/{bamDIR}/{{sampleCMM}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"])
+        bamFile = expand("{outputDIR}/{bamDIR}/{{sampleCMM}}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"]),
+        refGenome = config["refFILE"]
     output:
-        expand("{outputDIR}/{metricsDIR}/{{sampleCMM}}.collectMultMetrics.quality_distribution.pdf", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"])
+        fileList = expand("{outputDIR}/{metricsDIR}/{{sampleCMM}}.collectMultMetrics.{fileOutputSuffixLIST}", outputDIR=config["outputDIR"], metricsDIR=config["metricsDIR"], fileOutputSuffixLIST=config["fileOutputSuffixLIST"])
     params:
         baseARGS=config["bamMetricsPicardValStringency"] + ' ' + config["bamMetricsPicardMexRec"],
-        outputSuffix=config["outputDIR"] + '/' + config["metricsDIR"] + '/{sampleCMM}.collectMultMetrics',
-        refLOC=config["inputDIR"] + '/' + config["refDIR"] + '/' + config["refFILE"],
-        logNAME="collectMultMetrics." + strftime("%Y-%m-%d.%H-%M-%S", gmtime())
+        outputSuffix=config["outputDIR"] + '/' + config["metricsDIR"] + '/{sampleCMM}.collectMultMetrics'
     log:
-        "log/" + config["bamMetricsDIR"] + "/collectMultMetrics"
+        stdErr = "log/" + config["bamMetricsDIR"] + '/collectMultMetrics/collectMultMetrics_{sampleCMM}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
     run: 
+        # 1.A Base call string.
         callString=config["bamMetrics_picardProg"] + ' CollectMultipleMetrics ' + str(params.baseARGS) \
-        + ' I=' + str(input) + ' O=' + str(params.outputSuffix) + ' R=' + str(params.refLOC) \
-        + " 2> " + str(log) + "/" + str(params.logNAME) + ".stderr"
-        call('echo "' + str(params.logNAME) + ':\n ' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        + ' I=' + str(input.bamFile) + ' O=' + str(params.outputSuffix) + ' R=' + str(input.refGenome)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+
+        # 2.A - Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr)[:-7] + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
         call(callString, shell=True)
-#-------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

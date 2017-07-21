@@ -1,0 +1,85 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:     2017-06-21
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/utils/utils.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    '1.VCF', '2.VCF'
+#
+# Output:                                   '12.VCF'
+#
+# Purpose: Merge variant tables.
+#
+#  **NOTE** Assumes that you want to merge all the tables 
+#       from files which are listed in your sample file.
+#
+#  **NOTE** Must write back to the sam output subdirectory
+#       that the files are contained within.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for system calls.
+from subprocess import call
+
+# Used for timestamping the log files.
+from time import localtime, strftime
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+##################################################
+# tableMERGE_getInputFileList
+##################################################
+# Generate list of required input files with respect to the sampleFORMAT type.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+def tableMERGE_getInputFileList(wildcards):
+    # Process if single
+    if config["sampleFORMAT"] == 'single' or config["sampleFORMAT"] == 'csv':
+        return unpack(expand("{outputDIR}/" + wildcards.tableMergeDIR + "/{samples}.{fileSuffix}.txt",
+            outputDIR=config["outputDIR"], samples=config["sample"], fileSuffix=wildcards.annotationSUFFIX))
+    # Process if pair
+    elif config["sampleFORMAT"] == 'pair':
+        return unpack(expand("{outputDIR}/" + wildcards.tableMergeDIR + "/{sample[1][tumor]}_{sample[1][normal]}.{fileSuffix}.txt",
+            outputDIR=config["outputDIR"], sample=pandas.read_table(config["sampleFILE"], " ").iterrows(), fileSuffix=wildcards.annotationSUFFIX))
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+##################################################
+# tableMERGE
+##################################################
+# Merge multiple tables together, copying over the header line of the first file.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+def tableMERGE(input, output, log):
+    # 1.A - Copy over the header-line that is shared across all '.TXT' files, using simple BASH Shell command (~ smaller overhead).
+    call("head -n 1 " + str(input[0]) + " > " + str(output), shell=True)
+    
+    # 2.A Copy over contents, less header-line, of each file.
+    with open(str(output), "a+") as outputTARGET:
+        # 2.B.1 Open each file, from a list of files, copying all lines except for the first.
+        for file in str(input).split():
+            with open(file, "r+") as inputTARGET:
+                next(inputTARGET)
+                for line in inputTARGET:
+                    outputTARGET.write(line)
+
+    # 3.A Write a descriptive line to the shell call log.
+    call('echo "#' + str(log.stdErr)[:-7] + ':\n **Python Scripts Merging Files. No Shell Calls**\n Input: ' \
+        + str(input) + '\nOutput: ' + str(output) + '" >> ' + config["shellCallFile"], shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule tableMERGE:
+    input:
+        # Need to provide sample names, generation of list different for 'single' versus 'pair'
+        inputTxtList = tableMERGE_getInputFileList
+    output:
+        outputTxt = expand("{outputDIR}/{{tableMergeDIR}}/all.samples.{{annotationSUFFIX}}.txt", outputDIR=config["outputDIR"])
+    log:
+        stdErr = "log/" + config["genericUtilDIR"] + '/tableMERGE/tableMERGE_all.samples_{annotationSUFFIX}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run:
+        tableMERGE(input.inputTxtList, output.outputTxt, log)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

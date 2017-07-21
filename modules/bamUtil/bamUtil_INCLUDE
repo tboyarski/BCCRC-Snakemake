@@ -1,0 +1,78 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-06-28
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/bamUtil/bamUtil.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+#
+# Purpose: Manipulate '.bam' files.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+########################################################################################################
+#                                          Usage Guidelines                                            #
+########################################################################################################
+# 1st       --- sortBAM_* MUST be performed first as nearly all of the subsequent steps will require a 
+#                   sorted '.bam' file. Either submodule can be used.
+# IMPORTANT --- mergeBAM MUST be performed prior to any steps which may affect the output of mergeBAM.
+#                   An example being the marking of duplicates cannot be performed prior to the merging
+#                   of the '.bam' files, else, duplicates will be missed as they will still be in 
+#                   separate files.
+# IMPORTANT --- markdupBAM MUST occur after mergeBAM. See mergeBAM for further explanation.
+# ...
+# Suggested --- filteredBAM
+# ...
+# Last      --- indexBAM MUST be performed last, as it is the other of the two modules with the output 
+#                   not marked as temp, as well, indexBAM also performs the symlinking of the files to 
+#                   the finalized '.bam' directory. Perform  this module last to link ".bam.bai".
+#
+#
+#
+#
+
+# Eliminate ambiguity as both are able to produce same output. Want to sort before merging.
+########################################################################################################
+#                                  Include all required Snakefiles.                                    #
+########################################################################################################
+
+include: "mergeBAM"
+# mergeBAM - Produce a single '.bam' file from a list of '.bam' files.
+
+include: "cleanBAM"
+# cleanBAM - Clean a '.bam' file.
+
+include: "endUtilBAM"
+# endUtilBAM - Mark the end of the annotation string so that all other outputs can be marked temp.
+
+include: "filteredBAM"
+# filteredBAM - Filter out low quality reads from a '.bam' file.
+
+include: "fixmateBAM"
+# fixmateBAM - Fill in mate coordinates, ISIZE, and mate related flags from a name-sorted alignment.
+
+include: "indexBAM"
+# indexBAM - Indexing of a '.bam' file
+
+include: "markdupBAM"
+# markdupBAM - Mark duplicate reads in a '.bam' file.
+
+if config["SoftwareChoiceFLAG_namesortBAM"] == "biobambam":
+    include: "namesortBAM_biobambam"
+    # namesortBAM - Name sort the '.bam' file, via biobambam.
+else:
+    include: "namesortBAM_samtools"
+    # namesortBAM - Name sort the '.bam' file, via samtools
+
+include: "rmdupBAM"
+# rmdupBAM - Remove duplicate reads from a '.bam' file.
+
+if config["SoftwareChoiceFLAG_sortBAM"] == "samtools":
+    include: "sortBAM_samtools"
+    # sortBAM - Sorting of the '.bam' file, via Samtools.
+    ruleorder: sortBAM_samtools > mergeBAM
+    # Ensure the file is sorted before it is merged 
+else:
+    include: "sortBAM_biobambam"
+    # sortBAM - Sorting of the '.bam' file, via Biobambam.
+    ruleorder: sortBAM_biobambam > mergeBAM
+    # Ensure the file is sorted before it is merged
+
+########################################################################################################

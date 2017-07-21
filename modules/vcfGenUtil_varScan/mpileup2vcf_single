@@ -1,0 +1,58 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski
+# Date:     2017-06-16
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + ROOT_PATH + "/modules/varScan/varScan.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .mpileup
+#
+# Output:                                   .snp.vcf
+#                                           .indel.vcf
+#
+# Purpose: Generate '.VCF' output from a '.mpileup' file.         
+#
+#   **Note** Varscan somatic must produce both snp and
+#       indel file, no calls exist to get only one or other.
+#       Vartype must always equal ['snp', 'indel'].
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used for system calls.
+from subprocess import call
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+rule mpileup2vcf_single:
+    input:
+        mpileup = expand("{outputDIR}/{mpileupDIR}/{{sampleMPU2VCFS}}{{chrMPU2VCFS}}.mpileup", outputDIR=config["outputDIR"], mpileupDIR=config["mpileupDIR"]),
+    output:
+        outputVCF = temp(expand("{outputDIR}/{vcfGenUtil_varScanDIR}/{{sampleMPU2VCFS}}{{chrMPU2VCFS}}.varScan.{{varTypeMPU2VCFS}}.vcf", outputDIR=config["outputDIR"], vcfGenUtil_varScanDIR=config["vcfGenUtil_varScanDIR"]))
+    wildcard_constraints:
+        # Constrain both wildcards to not start with '-' '_' or '\', must be comprised of only letters and numbers
+        sampleMPU2VCFS = config["sampleREGEX"],
+        # Constrain both vartypes to be either 'snp' or 'indel'
+        varTypeMPU2VCFS = config["varTypeREGEX"],
+        # May or may not start with _, then consists of any number of letter, number or _, and must finish with a '.' AND a digit, or no '.' AND a digit
+        chrMPU2VCFS = config["chrREGEX"]
+    params:
+        baseArgs=config["minCoverage"]+" "+config["minRead"]+" "+config["minQuality"]+" "+config["minFrequency"]+" "+config["pValue"]+" "+config["strandFilter"]+" "+config["outVCF"]
+    log:
+        stdErr = "log/" + config["vcfGenUtil_varScanDIR"] + '/mpileup2vcf_pair/mpileup2vcf_pair_{sampleMPU2VCFS}_chr{chrMPU2VCFS}.{varTypeMPU2VCFS}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run:
+        # 1.A - Base call string.
+        callString=config["vcfGenUtil_varScan_varScanProg"] + " mpileup2" + wildcards.varTypeMPU2VCFS + " " + str(input.mpileup) \
+        + " " + str(params.baseArgs) + " > " + str(output.outputVCF)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr)[:-7] + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------

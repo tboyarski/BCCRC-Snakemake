@@ -1,0 +1,36 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:     2017-06-19
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/vcfAnnotate/vcfAnnotate.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+#
+# Purpose: Annotation of '.VCF' files.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+########################################################################################################
+#                                          Usage Guidelines                                            #
+########################################################################################################
+# 1st       --- canonical or noncanonical annotation. 
+# Suggested --- snp:        dbsnp + cosmic
+# Suggested --- indel:      indel
+########################################################################################################
+#                                  Include all required Snakefiles.                                    #
+########################################################################################################
+
+include: "canonical"
+# canonical - Canonical annotation of a '.VCF' file.
+
+include: "cosmic"
+# cosmic - Variant annoation using Cosmic database set.
+
+include: "dbsnp"
+# dbsnp - DbSnp annotation of a '.VCF' file.
+
+include: "indel"
+# indel - Indel annotation of a '.VCF' file.
+
+include: "noncanonical"
+# noncanonical - Same annotation paramters as canonical, except without '-canon' ... non-canonical call.
+
+########################################################################################################

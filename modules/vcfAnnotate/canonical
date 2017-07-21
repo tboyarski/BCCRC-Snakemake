@@ -1,0 +1,52 @@
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# Author:   Tim Boyarski                                    
+# Date:	    2017-07-05
+#-----------------------------------------------------------
+# Call: call("python " + snakeDIR + "/modules/vcfAnnotate/vcfAnnotate.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
+# Input:                                    .vcf   
+#
+# Output:                                   .canonical.vcf   
+#
+# Purpose: Annotate a '.VCF' file via canonical form.
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
+# Used for timestamping the log files.
+from time import localtime, strftime
+
+# Used for system calls.
+from subprocess import call
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+# SNAKEMAKE RULE #
+#-----------------
+rule canonical:
+    input:
+        inputVCF = "output/{pathCAN}/{sampleCAN}.vcf"
+    output:
+        outputVCF = temp("output/{pathCAN}/{sampleCAN}.canonical_annotated.vcf"),
+        summaryHTML = "output/{pathCAN}/{sampleCAN}.canonical.summary.html",
+        genesTXT = "output/{pathCAN}/{sampleCAN}.canonical.summary.genes.txt"
+    params:
+        baseARGS=config["annotateVerbose"]+' '+config["snpEffConfig"]+' '+config["snpEffFormat"]+' '+config["snpEffHGVS"] \
+            +' '+config["snpEffDownstream"]+' '+config["snpEffIntergenic"]+' '+config["snpEffUpstream"]+' '+config["snpEffgatk"]
+    log:
+        stdErr = "log/" + config["vcfAnnotateDIR"] + '/canonical/canonical_{sampleCAN}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+    run: 
+        # 1.A - Base call string.
+        callString=config["vcfAnnotate_javaProg"] + ' ' + config["vcfAnnotate_snpEffProg"] \
+        + ' eff ' + str(params.baseARGS) + ' -canon ' + config["snpEffGenomeVersion"] \
+        + ' -s ' + str(output.summaryHTML) \ 
+        + ' ' + str(input.inputVCF) + ' > ' + str(output.outputVCF)
+
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        if config["offCluster"]:
+            callString += ' 2> ' + str(log.stdErr)
+
+        # 2.A -  Printing system calls to a local file, and then executing them.
+        call('echo "#' + str(log.stdErr) + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
+        call(callString, shell=True)
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
