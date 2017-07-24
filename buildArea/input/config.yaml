@@ -1,41 +1,95 @@
-#---------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 # Author: tboyarski
-# Date: 2017-06-07.10-42-31
-#---------------------
+# Date: 2017-07-24.10-25-09
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-#################################
-# ----- Global Variables ------ #
-#################################
-#       -- Parameters --        #
+#####################################
+# Global Parameters
+#####################################
+#----------------------------------------------------------------- Parameters ------------------------------------------------------------------------
 shellCallFile: shellCalls.txt
-offCluster: True
+offCluster: False
 fastqKEEP: True
-intermediateKEEP: False
-refFILE: GRCh37-lite.fa
-chrLIST: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'MT', 'GL000207.1', 'GL000226.1', 'GL000229.1', 'GL000231.1', 'GL000210.1', 'GL000239.1', 'GL000235.1', 'GL000201.1', 'GL000247.1', 'GL000245.1', 'GL000197.1', 'GL000203.1', 'GL000246.1', 'GL000249.1', 'GL000196.1', 'GL000248.1', 'GL000244.1', 'GL000238.1', 'GL000202.1', 'GL000234.1', 'GL000232.1', 'GL000206.1', 'GL000240.1', 'GL000236.1', 'GL000241.1', 'GL000243.1', 'GL000242.1', 'GL000230.1', 'GL000237.1', 'GL000233.1', 'GL000204.1', 'GL000198.1', 'GL000208.1', 'GL000191.1', 'GL000227.1', 'GL000228.1', 'GL000214.1', 'GL000221.1', 'GL000209.1', 'GL000218.1', 'GL000220.1', 'GL000213.1', 'GL000211.1', 'GL000199.1', 'GL00217.1', 'GL000216.1', 'GL000215.1', 'GL000205.1', 'GL000219.1', 'GL000224.1', 'GL000223.1', 'GL000195.1', 'GL000212.1', 'GL000222.1', 'GL000200.1', 'GL000193.1', 'GL000194.1', 'GL000225.1', 'GL000192.1']
-#       -- Directory --         #
+inputPartList: input/inputPartList.txt
+refFILE: /genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa
+supportingRefFILE: ['/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.dict', '/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa.amb', '/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa.ann', '/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa.bwt', '/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa.fai', '/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa.pac', '/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa.sa']
+chrLIST: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'MT', 'GL000207.1', 'GL000226.1', 'GL000229.1', 'GL000231.1', 'GL000210.1', 'GL000239.1', 'GL000235.1', 'GL000201.1', 'GL000247.1', 'GL000245.1', 'GL000197.1', 'GL000203.1', 'GL000246.1', 'GL000249.1', 'GL000196.1', 'GL000248.1', 'GL000244.1', 'GL000238.1', 'GL000202.1', 'GL000234.1', 'GL000232.1', 'GL000206.1', 'GL000240.1', 'GL000236.1', 'GL000241.1', 'GL000243.1', 'GL000242.1', 'GL000230.1', 'GL000237.1', 'GL000233.1', 'GL000204.1', 'GL000198.1', 'GL000208.1', 'GL000191.1', 'GL000227.1', 'GL000228.1', 'GL000214.1', 'GL000221.1', 'GL000209.1', 'GL000218.1', 'GL000220.1', 'GL000213.1', 'GL000211.1', 'GL000199.1', 'GL000217.1', 'GL000216.1', 'GL000215.1', 'GL000205.1', 'GL000219.1', 'GL000224.1', 'GL000223.1', 'GL000195.1', 'GL000212.1', 'GL000222.1', 'GL000200.1', 'GL000193.1', 'GL000194.1', 'GL000225.1', 'GL000192.1']
+#----------------------------------------------------------------- Wildcard Constraint Regex ---------------------------------------------------------
+sampleREGEX: '[^_|-|\/][0-9a-zA-Z]*'
+chrREGEX: '(_[0-9a-zA-Z\.]*(\.\d)?)?'
+vcfProgramREGEX: '[0-9a-zA-Z]*'
+varTypeREGEX: '[0-9a-zA-Z]*'
+fastqReadDirectionREGEX: '(\.\d)?'
+fastqCompressionSuffixREGEX: '(\.gz)?'
+#----------------------------------------------------------------- Directory -------------------------------------------------------------------------
 inputDIR: input
-refDIR: ref
 outputDIR: output
 bamDIR: bam
+fastqDIR: fastq
 metricsDIR: metrics
-#         -- Sample --          #
-sample: ['Pfeiffer1', 'Pfeiffer2']
+mpileupDIR: mpileup
+#----------------------------------------------------------------- Sample Info -----------------------------------------------------------------------
+sample: ['Pfeiffer']
 sampleFILE: input/sampleFILEsingle.txt
 sampleFORMAT: single
-#################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-#################################
-# ----- utils Parameters ------ #
-#################################
-#       -- Software --          #
-utils_picardProg: picard
-utils_javaProg: java -Xmx2G
-utils_snpSiftProg: -jar ~/share/usr/anaconda/4.3.0/envs/CentOS5-APR28-2/share/snpeff-4.1l-0/SnpSift.jar
-utils_vcfEffOnePerLineProg: ~/share/usr/anaconda/4.3.0/envs/CentOS5-APR28-2/share/snpeff-4.1l-0/scripts/vcfEffOnePerLine.pl
-#    -- Shared Variables --     #
+#####################################
+# genericUtil Parameters
+#####################################
+#----------------------------------------------------------------- *Software* ------------------------------------------------------------------------
+#----------------------------------------------------------------- *Shared Variables* ----------------------------------------------------------------
+genericUtilDIR: genericUtil
+#----------------------------------------------------------------- tableMERGE ------------------------------------------------------------------------
+outputMergeLocation: vcfGenUtil_varScan/tables
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+#####################################
+# vcfAnnotate Parameters
+#####################################
+#----------------------------------------------------------------- *Software* ------------------------------------------------------------------------
+vcfAnnotate_javaProg: java -Xmx4G
+vcfAnnotate_snpSiftProg: -jar /genesis/extscratch/clc/usr/anaconda/4.3.0/envs/CentOS5-APR28-2/share/snpeff-4.1l-0/SnpSift.jar
+vcfAnnotate_snpEffProg: -jar /genesis/extscratch/clc/usr/anaconda/4.3.0/envs/CentOS5-APR28-2/share/snpeff-4.1l-0/snpEff.jar
+#----------------------------------------------------------------- *Shared Variables* ----------------------------------------------------------------
+sampleFORM: "varType annotated\nsnp .canonical_annotated.dbsnp_annotated.cosmic_annotated\nindel .canonical_annotated.indel_annotated\n"
+vcfAnnotateDIR: vcfGenUtil_varScan
+annotateVerbose: -v
+annotateID: -id
+annotateDbSnp: /genesis/extscratch/clc/references/dbsnp/dbsnp_137.b37.vcf
+snpEffGenomeVersion: GRCh37.72
+snpEffConfig: -c /genesis/extscratch/clc/usr/anaconda/4.3.0/envs/CentOS5-APR28-2/share/snpeff-4.1l-0/snpEff.config
+snpEffFormat: -i vcf
+snpEffDownstream: -no-downstream
+snpEffIntergenic: -no-intergenic
+snpEffUpstream: -no-upstream
+snpEffgatk: -o gatk
+snpEffTranscript: ''
+snpEffHGVS: -hgvs
+#----------------------------------------------------------------- canonical -------------------------------------------------------------------------
+#----------------------------------------------------------------- cosmic ----------------------------------------------------------------------------
+snpSiftCosmic: /genesis/extscratch/clc/references/cosmic/CosmicCodingMuts_v68.b37.vcf
+#----------------------------------------------------------------- dbsnp -----------------------------------------------------------------------------
+#----------------------------------------------------------------- indel -----------------------------------------------------------------------------
+knownIndel1000G: /genesis/extscratch/clc/references/1000g/1000G_phase1.indels.b37.with_id.vcf
+knownIndelMills1000G: /genesis/extscratch/clc/references/1000g/Mills_and_1000G_gold_standard.indels.b37.with_id.vcf
+#----------------------------------------------------------------- noncanonical ----------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+#####################################
+# vcfUtil Parameters
+#####################################
+#----------------------------------------------------------------- *Software* ------------------------------------------------------------------------
+vcfUtil_samtoolsProg: samtools
+vcfUtil_picardProg: picard
+vcfUtil_javaProg: java -Xmx2G
+vcfUtil_snpSiftProg: -jar ~/share/usr/anaconda/4.3.0/envs/CentOS5-APR28-2/share/snpeff-4.1l-0/SnpSift.jar
+vcfUtil_vcfEffOnePerLineProg: ~/share/usr/anaconda/4.3.0/envs/CentOS5-APR28-2/share/snpeff-4.1l-0/scripts/vcfEffOnePerLine.pl
+#----------------------------------------------------------------- *Shared Variables* ----------------------------------------------------------------
 vcfSampleSingle: 0 
 vcfGenIDsSingle: GT GQ SDP DP RD AD FREQ PVAL RBQ ABQ RDF RDR ADF ADR 
 vcfInfoFieldsDbSnp: CDA KGValidated OM PM GMAF
@@ -46,149 +100,186 @@ vcfInfoFieldsPair: DP SS SSC GPV SPV CDA KGValidated OM PM GMAF
 vcfGenFieldsPair: GEN[0].GT GEN[1].GT GEN[0].GQ GEN[1].GQ GEN[0].DP GEN[1].DP GEN[0].RD GEN[1].RD GEN[0].AD GEN[1].AD GEN[0].FREQ GEN[1].FREQ GEN[0].DP4 GEN[1].DP4  
 vcfFields: CHROM POS ID REF ALT QUAL FILTER
 effFields: ['"EFF[*].EFFECT"', '"EFF[*].IMPACT"', '"EFF[*].FUNCLASS"', '"EFF[*].CODON"', '"EFF[*].AA"', '"EFF[*].GENE"', '"EFF[*].BIOTYPE"', '"EFF[*].CODING"', '"EFF[*].TRID"', '"EFF[*].RANK"']
-utilsDIR: utils
-#    -- sam2BAM Specific --     #
-Sam2BamARGS: -bS
-samDIR: sam
-#  tableMERGE_ADAPTOR Specific  #
-#  vcfGetTable_ADAPTOR Specific #
+vcfUtilDIR: vcfUtil
+#----------------------------------------------------------------- getVcfTable -----------------------------------------------------------------------
 OnePerLineFLAG: False
-#    vcfMERGE_ADAPTOR Specific  #
-#    vcfSORT_ADAPTOR Specific   #
-vcfSORTInputDIR: varScan
+#----------------------------------------------------------------- mergeVCF --------------------------------------------------------------------------
+#----------------------------------------------------------------- sortVCF ---------------------------------------------------------------------------
 vcfSORTValStringency: VALIDATION_STRINGENCY=LENIENT
 vcfSORTMaxRec: MAX_RECORDS_IN_RAM=5000000
 vcfSORTSeqDict: ~/share/references/genomes/gsc/GRCh37-lite.dict
-#################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-#################################
-# ----- annotateVcf Parameters ------ #
-#################################
-#       -- Software --          #
-annotateVcf_javaProg: java -Xmx2G
-annotateVcf_snpSiftProg: -jar ~/share/usr/anaconda/4.3.0/envs/CentOS5-APR28-2/share/snpeff-4.1l-0/SnpSift.jar
-annotateVcf_snpEffProg: -jar ~/share/usr/anaconda/4.3.0/envs/CentOS5-APR28-2/share/snpeff-4.1l-0/snpEff.jar
-#    -- Shared Variables --     #
-sampleFORM: "varType annotated\nsnp .canonical_annotated.dbsnp_annotated.cosmic_annotated\nindel .canonical_annotated.indel_annotated\n"
-annotateVcfDIR: annotateVcf
-annotateVerbose: -v
-annotateID: -id
-annotateDbSnp: ~/share/references/dbsnp/dbsnp_137.hg19.vcf
-snpEffGenomeVersion: GRCh37.72
-snpEffConfig: -c ~/share/usr/anaconda/4.3.0/envs/CentOS5-APR28-2/share/snpeff-4.1l-0/snpEff.config
-snpEffFormat: -i vcf
-snpEffDownstream: -no-downstream
-snpEffIntergenic: -no-intergenic
-snpEffUpstream: -no-upstream
-snpEffgatk: -o gatk
-snpEffgatk: -o gatk
-snpEffTranscript: ''
-snpEffHGVS: -hgvs
-#   -- canonical Specific --    #
-#     -- cosmic Specific --     #
-snpSiftCosmic: ~/share/references/cosmic/CosmicCodingMuts_v68.hg19.fixed.sort.vcf
-#     -- dbsnp Specific --      #
-#      -- indel Specific --     #
-knownIndel1000G: ~/share/references/1000g/1000G_phase1.indels.hg19.with_id.vcf
-knownIndelMills1000G: ~/share/references/1000g/Mills_and_1000G_gold_standard.indels.hg19.with_id.vcf
-# -- noncanonical Specific --   #
-#################################
-
-
-
-#################################
-# ---- varScan Parameters ----- #
-#################################
-#       -- Software --          #
-varScan_varScanProg: varscan
-varScan_samtoolsProg: samtools
-#    -- Shared Variables --     #
+#####################################
+# vcfGenUtil_varScan Parameters
+#####################################
+#----------------------------------------------------------------- *Software* ------------------------------------------------------------------------
+vcfGenUtil_varScan_varScanProg: varscan
+vcfGenUtil_varScan_samtoolsProg: samtools
+#----------------------------------------------------------------- *Shared Variables* ----------------------------------------------------------------
 vcfProgram: varScan
 varType: ['snp', 'indel']
-varScanSplitDIR: varScanSplit
-varScanDIR: varScan
-varScanChrSplit: True
-minCOV: --min-coverage 20
-minREAD: --min-reads2 10
-minQUAL: --min-avg-qual 20
-minFREQ: --min-var-freq 0.01
-pVALUE: --p-value 0.05
-strandFILT: --strand-filter 0
+vcfGenUtil_varScanDIR: vcfGenUtil_varScan
+minCoverage: --min-coverage 20
+minRead: --min-reads2 10
+minQuality: --min-avg-qual 20
+minFrequency: --min-var-freq 0.01
+pValue: --p-value 0.05
+strandFilter: --strand-filter 0
 outVCF: --output-vcf 1
-minSTRAND: --min-strands2 0
-posVALID: --validation 1
-#   mpileup2cns_SingleUNSPLIT   #
-# mpileup2copycall_PairUNSPLIT  #
-#  mpileup2copynum_PairUNSPLIT  #
+minStrand: --min-strands2 0
+posValid: --validation 0
+#----------------------------------------------------------------- conSeq ----------------------------------------------------------------------------
+#----------------------------------------------------------------- copycall --------------------------------------------------------------------------
+#----------------------------------------------------------------- copynum ---------------------------------------------------------------------------
 mapQSkip: -q 1
-#    mpileup2vcf_PairUNSPLIT    #
-#   mpileup2vcf_SingleUNSPLIT   #
-#     mpileup2vcf_PairSPLIT     #
-#    mpileup2vcf_SingleSPLIT    #
-#################################
+#----------------------------------------------------------------- mpileup2vcf_pair ------------------------------------------------------------------
+#----------------------------------------------------------------- mpileup2vcf_single ----------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
-#################################
-# ----- mpileup Parameters ------ #
-#################################
-#            Software           #
+#####################################
+# mpileupGen Parameters
+#####################################
+#----------------------------------------------------------------- *Software* ------------------------------------------------------------------------
 mpileup_samtoolsProg: samtools
-#        Shared Variables       #
-mpileupDIR: mpileup
-bitFLAG: 512
-countORPHAN: -A
-noBAQ: -B
-maxDEP: -d 10000000
-mapQUAL: -q 20
+#----------------------------------------------------------------- *Shared Variables* ----------------------------------------------------------------
+mpileupGenDIR: mpileupGen
+bitFlag: 512
+countOrphan: -A
+noBaq: -B
+maxDepth: -d 10000000
+mapQuality: -q 20
 bedFILE: ""
-#         mpileupUNSPLIT        #
-#          mpileupSPLIT         #
-#################################
+#----------------------------------------------------------------- bam2mpileup -----------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-#################################
-# ----- processBam Parameters ------ #
-#################################
-#       -- Software --          #
-processBam_samtoolsProg: samtools
-processBam_picardProg: picard
-processBam_bwaProg: bwa
-processBam_bamsortProg: bamsort
-processBam_perlProg: perl
-processBam_bammarkduplicates2Prog: bammarkduplicates2
+#####################################
+# bamUtil Parameters
+#####################################
+#----------------------------------------------------------------- *Software* ------------------------------------------------------------------------
+bamUtil_samtoolsProg: samtools
+bamUtil_picardProg: picard
+bamUtil_bamsortProg: bamsort
+bamUtil_bammarkduplicates2Prog: bammarkduplicates2
+SoftwareChoiceFLAG_namesortBAM: biobambam
 SoftwareChoiceFLAG_sortBAM: biobambam
-SoftwareChoiceFLAG_alignBAM: default
-#    -- Shared Variables --     #
-fastqDIR: fastq
-processBamDIR: processBam
+#----------------------------------------------------------------- *Shared Variables* ----------------------------------------------------------------
+bamUtilDIR: bamUtil
 picardValStringency: VALIDATION_STRINGENCY=LENIENT
 picardMaxRec: MAX_RECORDS_IN_RAM=5000000
-#    -- alignBAM Specific --    #
+#----------------------------------------------------------------- mergeBAM --------------------------------------------------------------------------
+bamMergeRootDIR: input/rawBam
+bamMergeSuffix: _Aligned.out_sorted_filtered
+#----------------------------------------------------------------- cleanBAM --------------------------------------------------------------------------
+#----------------------------------------------------------------- filteredBAM -----------------------------------------------------------------------
+filterBitFlag: 512
+#----------------------------------------------------------------- fixmateBAM ------------------------------------------------------------------------
+#----------------------------------------------------------------- indexBAM --------------------------------------------------------------------------
+fileTag: _Aligned.out_sorted_filtered_markdup_endUtil
+#----------------------------------------------------------------- markdupBAM ------------------------------------------------------------------------
+compressLevel: level=-1
+#----------------------------------------------------------------- namesortBAM_biobambam -------------------------------------------------------------
+#----------------------------------------------------------------- namesortBAM_samtools --------------------------------------------------------------
+#----------------------------------------------------------------- rmdupBAM --------------------------------------------------------------------------
+#----------------------------------------------------------------- sortBAM_biobambam -----------------------------------------------------------------
+#----------------------------------------------------------------- sortBAM_samtools ------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+#####################################
+# bamGen Parameters
+#####################################
+#----------------------------------------------------------------- *Software* ------------------------------------------------------------------------
+bamGen_bwaProg: bwa
+bamGen_fastxProg: /genesis/extscratch/clc/usr/fastx_toolkit-0.0.13.2/bin/fastx_trimmer
+bamGen_samtoolsProg: samtools
+bamGen_starProg: STAR
+SoftwareChoiceFLAG_alignBAM: bwa
+#----------------------------------------------------------------- *Shared Variables* ----------------------------------------------------------------
+bamGenDIR: bamGen
+#----------------------------------------------------------------- bamALIGN_bwa ----------------------------------------------------------------------
+bwa_refFILE: /genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa
+bwa_supportingRefFILE: ['/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.dict', '/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa.amb', '/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa.ann', '/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa.bwt', '/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa.fai', '/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa.pac', '/genesis/extscratch/clc/references/genomes/gsc/bwa-0.7.5a/GRCh37-lite.fa.sa']
 picardCompatibility: -M
 coreNumber: -t 4
 seqPlatform: ILLUMINA
-trimReadsFLAG: False
+trimReadsFlag: False
 phred64: -Q 33
-firstBaseToKeep: ''
-lastBaseToKeep: ''
-#    -- bam2fastq Specific --   #
+firstBaseToKeep: -f 1
+lastBaseToKeep: -l 1
+#----------------------------------------------------------------- bamALIGN_star ---------------------------------------------------------------------
+starRefGenomeDIR: /genesis/extscratch/clc/references/star/GRCh37/ref_genome.fa.star.idx
+runThreadN: --runThreadN 4
+readFilesCommand: --readFilesCommand zcat
+outSAMtype: --outSAMtype BAM Unsorted
+outSAMunmapped: --outSAMunmapped Within KeepPairs
+quantMode: --quantMode GeneCounts
+sjdbGTFfile: /genesis/extscratch/clc/references/star/GRCh37/ref_annot.gtf
+chimSegmentMin: --chimSegmentMin 15
+outSAMstrandField: --outSAMstrandField intronMotif
+outputSuffixLIST_star: ['_Chimeric.out.sam','_Log.final.out','_Log.out','_Log.progress.out','_ReadsPerGene.out.tab','_SJ.out.tab']
+#----------------------------------------------------------------- sam2BAM ---------------------------------------------------------------------------
+sam2BamARGS: -bS
+samDIR: sam
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+#####################################
+# fastqUtil Parameters
+#####################################
+#----------------------------------------------------------------- *Software* ------------------------------------------------------------------------
+fastqUtil_perlProg: perl
+#----------------------------------------------------------------- *Shared Variables* ----------------------------------------------------------------
+fastqUtilDIR: fastqUtil
+#----------------------------------------------------------------- fastq2GZ --------------------------------------------------------------------------
+#----------------------------------------------------------------- fastqc ----------------------------------------------------------------------------
+fastqc: /genesis/extscratch/clc/usr/fastqc-0.10.1/fastqc.pl
+fastqcDIR: fastqc
+nogroupFlag: ''
+#----------------------------------------------------------------- mergeFASTQ ------------------------------------------------------------------------
+mergeFastqRootDIR: ''
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+#####################################
+# fastqGen Parameters
+#####################################
+#----------------------------------------------------------------- *Software* ------------------------------------------------------------------------
+fastqGen_samtoolsProg: samtools
+fastqGen_picardProg: picard
+#----------------------------------------------------------------- *Shared Variables* ----------------------------------------------------------------
+fastqGenDIR: fastqGen
+#----------------------------------------------------------------- bam2fastq_picard ------------------------------------------------------------------
 rawBamDIR: rawBam
 samtoolsSortMem: 4000000000
-#    -- cleanBAM Specific --    #
-#    -- fastq2GZ Specific --    #
-#     -- fastqc Specific --     #
-fastqc: ~/share/usr/fastqc-0.10.1/fastqc.pl
-nogroupFLAG: ''
-#   -- filteredBAM Specific --  #
-filterBitFlag: 512
-#   -- fixmateBAM Specific --   #
-#    -- indexBAM Specific --    #
-fileTAG: _realigned_sorted_filtered_markdup
-#   -- markdupBAM Specific --   #
-compressLVL: level=-1
-#  -- namesortBAM Specific --   #
-#    -- rmdupBAM Specific --    #
-#   -- sortBAM_* Specific --    #
-#################################
+picardValStringency: VALIDATION_STRINGENCY=LENIENT
+picardMaxRec: MAX_RECORDS_IN_RAM=5000000
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+#####################################
+# bamMetrics Parameters
+#####################################
+#----------------------------------------------------------------- *Software* ------------------------------------------------------------------------
+bamMetrics_samtoolsProg: samtools
+bamMetrics_picardProg: java -Xmx4G -jar /extscratch/clc/usr/anaconda/4.3.0/envs/CentOS5-Compatible/share/picard-2.9.0-0/picard.jar
+bamMetrics_RScriptProg: /extscratch/clc/usr/R/3.1.2/bin/Rscript
+#----------------------------------------------------------------- *Shared Variables* ----------------------------------------------------------------
+bamMetricsDIR: bamMetrics
+bamMetricsPicardValStringency: VALIDATION_STRINGENCY=LENIENT
+bamMetricsPicardMexRec: MAX_RECORDS_IN_RAM=5000000
+#----------------------------------------------------------------- collectGCBias ---------------------------------------------------------------------
+#----------------------------------------------------------------- collectMERGE_ADAPTOR --------------------------------------------------------------
+#----------------------------------------------------------------- collectMultMetrics ----------------------------------------------------------------
+fileOutputSuffixLIST: ['alignment_summary_metrics', 'base_distribution_by_cycle_metrics', 'base_distribution_by_cycle.pdf', 'insert_size_histogram.pdf','insert_size_metrics', 'quality_by_cycle_metrics', 'quality_by_cycle.pdf','quality_distribution_metrics', 'quality_distribution.pdf']
+#----------------------------------------------------------------- collectRNASeq ---------------------------------------------------------------------
+RRNAIntervalList: /extscratch/clc/references/dbsnp/dbsnp_137.b37.interval_list
+RefFlat: /extscratch/clc/references/refseq.hg19.refFlat
+StrandSpecificity: NONE
+#----------------------------------------------------------------- collectWGS ------------------------------------------------------------------------
+#----------------------------------------------------------------- flagStats -------------------------------------------------------------------------
+#----------------------------------------------------------------- readLen ---------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
