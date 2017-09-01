@@ -39,9 +39,6 @@ include: "mergeBAM"
 include: "cleanBAM"
 # cleanBAM - Clean a '.bam' file.
 
-include: "endUtilBAM"
-# endUtilBAM - Mark the end of the annotation string so that all other outputs can be marked temp.
-
 include: "filteredBAM"
 # filteredBAM - Filter out low quality reads from a '.bam' file.
 

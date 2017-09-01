@@ -74,8 +74,8 @@ with open(argv[1], "a+") as yamlTARGET:
     SoftwareChoiceFLAG_sortBAM="SoftwareChoiceFLAG_sortBAM: biobambam\n"
     # 2B. Shared variables
     bamUtilDIR="bamUtilDIR: bamUtil\n"
-    picardValStringency="picardValStringency: VALIDATION_STRINGENCY=LENIENT\n"
-    picardMaxRec="picardMaxRec: MAX_RECORDS_IN_RAM=5000000\n"
+    bamUtil_picardValStringency="bamUtil_picardValStringency: VALIDATION_STRINGENCY=LENIENT\n"
+    bamUtil_picardMaxRec="bamUtil_picardMaxRec: MAX_RECORDS_IN_RAM=5000000\n"
     # 2C. mergeBAM variables
     bamMergeRootDIR='bamMergeRootDIR: input/rawBam\n'
     bamMergeSuffix='bamMergeSuffix: _Aligned.out_sorted_filtered\n'
@@ -84,11 +84,12 @@ with open(argv[1], "a+") as yamlTARGET:
     filterBitFlag="filterBitFlag: 512\n"
     # 2C. fixmateBAM variables
     # 2C. indexBAM variables
-    fileTag="fileTag: _Aligned.out_sorted_filtered_markdup_endUtil\n"
+    fileTag="fileTag: _Aligned.out_sorted_filtered_markdup\n"
     # 2C. markdupBAM variables
     compressLevel="compressLevel: level=-1\n"
     # 2C. namesortBAM_biobambmam variables
     # 2C. namesortBAM_samtools variables
+    bamUtil_samtoolsSortMem="bamUtil_samtoolsSortMem: 4000000000\n"
     # 2C. rmdupBAM variables
     # 2C. sortBAM_biobambam variables
     # 2C. sortBAM_samtools variables
@@ -102,7 +103,7 @@ with open(argv[1], "a+") as yamlTARGET:
         bamUtil_samtoolsProg + bamUtil_picardProg  + bamUtil_bamsortProg + bamUtil_bammarkduplicates2Prog +
         SoftwareChoiceFLAG_namesortBAM + SoftwareChoiceFLAG_sortBAM +
         "#----------------------------------------------------------------- *Shared Variables* ----------------------------------------------------------------\n" +
-        bamUtilDIR + picardValStringency + picardMaxRec +
+        bamUtilDIR + bamUtil_picardValStringency + bamUtil_picardMaxRec +
         "#----------------------------------------------------------------- mergeBAM --------------------------------------------------------------------------\n" +
         bamMergeRootDIR + bamMergeSuffix +
         "#----------------------------------------------------------------- cleanBAM --------------------------------------------------------------------------\n" +
@@ -115,6 +116,7 @@ with open(argv[1], "a+") as yamlTARGET:
         compressLevel +
         "#----------------------------------------------------------------- namesortBAM_biobambam -------------------------------------------------------------\n" +
         "#----------------------------------------------------------------- namesortBAM_samtools --------------------------------------------------------------\n" +
+        bamUtil_samtoolsSortMem +
         "#----------------------------------------------------------------- rmdupBAM --------------------------------------------------------------------------\n" +
         "#----------------------------------------------------------------- sortBAM_biobambam -----------------------------------------------------------------\n" +
         "#----------------------------------------------------------------- sortBAM_samtools ------------------------------------------------------------------\n" +
@@ -194,15 +196,15 @@ with open(argv[3], "a+") as pipeTARGET:
         'include: "' + path.dirname(path.realpath(__file__)) + '/' + moduleNAME + '_INCLUDE"\n'
         "#  Required: NONE\n"
         "#  Call via:\n"
-        '#mergeBAM:                 expand("{bamMergeRootDIR}/{samples}.bam", bamMergeRootDIR=config["bamMergeRootDIR"], samples=config["sample"])\n'
-        '#cleanBAM:                 expand("{outputDIR}/{bamDIR}/{samples}_clean.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"])\n'
-        '#filteredBAM:              expand("{outputDIR}/{bamDIR}/{samples}_filtered.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"])\n'
-        '#fixmateBAM:               expand("{outputDIR}/{bamDIR}/{samples}_fixmate.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"])\n'
-        '#indexBAM:                 expand("{outputDIR}/{bamDIR}/{samples}{fileTag}.bam.bai", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"], fileTag=config["fileTag"])\n'
-        '#markdupBAM:               expand("{outputDIR}/{bamDIR}/{samples}_markdup.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"])\n'
-        '#namesortBAM_*:            expand("{outputDIR}/{bamDIR}/{samples}_namesort.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"])\n'
-        '#rmdupBAM:                 expand("{outputDIR}/{bamDIR}/{samples}_rmdup.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"])\n'
-        '#sortBAM_*:                expand("{outputDIR}/{bamDIR}/{samples}_sorted.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"])\n'
+        '#mergeBAM:                 expand("{bamMergeRootDIR}/{samples}.bam", bamMergeRootDIR=config["bamMergeRootDIR"], samples=config["sample"]),\n'
+        '#cleanBAM:                 expand("{outputDIR}/{bamDIR}/{samples}_clean.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"]),\n'
+        '#filteredBAM:              expand("{outputDIR}/{bamDIR}/{samples}_filtered.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"]),\n'
+        '#fixmateBAM:               expand("{outputDIR}/{bamDIR}/{samples}_fixmate.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"]),\n'
+        '#indexBAM:                 expand("{outputDIR}/{bamDIR}/{samples}{fileTag}.bam.bai", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"], fileTag=config["fileTag"]),\n'
+        '#markdupBAM:               expand("{outputDIR}/{bamDIR}/{samples}_markdup.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"]),\n'
+        '#namesortBAM_*:            expand("{outputDIR}/{bamDIR}/{samples}_namesort.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"]),\n'
+        '#rmdupBAM:                 expand("{outputDIR}/{bamDIR}/{samples}_rmdup.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"]),\n'
+        '#sortBAM_*:                expand("{outputDIR}/{bamDIR}/{samples}_sorted.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"]),\n'
         "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
     )
 #-----------------------------------------------------------------------------------------------------------------------------------------------------

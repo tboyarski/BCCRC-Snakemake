@@ -3,9 +3,6 @@
 # Date:     2017-06-14
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 # Call: call("python " + snakeDIR + "/modules/XXXXXXXX/XXXXXXXX.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
-# Input:                                    .XXXXXXXX
-
-# Output:                                   .XXXXXXXX
 
 # Purpose: Automate the population of user's pipeline
 #   Snakefile, '.YAML', and '.JSON' files.

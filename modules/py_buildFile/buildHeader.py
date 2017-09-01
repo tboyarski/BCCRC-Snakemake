@@ -103,7 +103,7 @@ def buildHeader(userRefFILE, yamlNAME, jsonNAME, snakeNAME):
     # Generate and append to file the following required paramters.
     with open(yamlNAME, "w+") as yamlTARGET:
         # 2A. Global Parameters
-        shellCallFile="shellCallFile: shellCalls.txt\n"
+        shellCallFile="shellCallFile: log/shellCalls.txt\n"
         offCluster="offCluster: False\n"
         fastqKEEP="fastqKEEP: True\n"
         inputPartList='inputPartList: input/inputPartList.txt\n'
@@ -111,7 +111,7 @@ def buildHeader(userRefFILE, yamlNAME, jsonNAME, snakeNAME):
         supportingRefFILE="supportingRefFILE: " + str(genSupportingFileList(userRefFILE)) + '\n'
         chrLIST="chrLIST: " + str(genChrList(userRefFILE)) + '\n'
         # 2A. Wildcard Contraint Regex
-        sampleREGEX="sampleREGEX: '[^_|-|\/][0-9a-zA-Z]*'\n"
+        sampleREGEX="sampleREGEX: '[^_|-|\/][0-9a-zA-Z-]*'\n"
         chrREGEX="chrREGEX: '(_[0-9a-zA-Z\.]*(\.\d)?)?'\n"
         vcfProgramREGEX="vcfProgramREGEX: '[0-9a-zA-Z]*'\n"
         varTypeREGEX="varTypeREGEX: '[0-9a-zA-Z]*'\n"
@@ -156,19 +156,28 @@ def buildHeader(userRefFILE, yamlNAME, jsonNAME, snakeNAME):
     # Generate and append to file a header for the Snakemake file.
     with open(snakeNAME, "w+") as snakeTARGET:
         snakeTARGET.write(
-            "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"+
-            "# Author: " + getuser() + "\n"+
-            "# Date: " + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + "\n"+
-            '# Call using: snakemake --jobs 10 --cluster-config input/config.json --jobname "{cluster.jobName}{jobid}" --drmaa "{cluster.clusterSpec}"\n'+
-            "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"+
-            '\n# Used by some modules which require paired tumor-normal samples\nfrom pandas import read_table\n'+
-            '\n# Used by some modules which require paired tumor-normal samples\nfrom io import StringIO\n'+
-            '\n# Global config:\n'+
-            'configfile: "' + yamlNAME + '"\n\n'+
-            "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"+
-            '\n# Global rule to pull all output files:\n'+
-            'rule all:\n    input:\n'+
-            '        # Single: Normal Runs\n'+
+            "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
+            "# Author: " + getuser() + "\n"
+            "# Date: " + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + "\n"
+            '# Call using: time snakemake --jobs 100 --cluster-config input/config.json --jobname "{cluster.jobName}.{jobid}" --drmaa "{cluster.clusterSpec}" --stats log/runStats.txt\n'
+            "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
+            '# PYTHON PACKAGES #\n'
+            '#------------------\n'
+            '# Used by some modules which require paired tumor-normal samples\nfrom pandas import read_table\n'
+            '# Used by some modules which require paired tumor-normal samples\nfrom io import StringIO\n'
+            "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
+            '# SNAKEMAKE CONFIGURATION #\n'
+            '#--------------------------\n'
+            '# Global config:\n'
+            'configfile: "' + yamlNAME + '"\n'
+            "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
+            "\n\n#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
+            '# SNAKEMAKE RULE #\n'
+            '#-----------------\n'
+            '# Global rule to pull all output files:\n'
+            'rule all:\n    input:\n'
+            '        # Single: Normal Runs\n'
             '        expand(...)\n'
+            "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
     )
 #-----------------------------------------------------------------------------------------------------------------------------------------------------

@@ -8,32 +8,34 @@
 # Output:                                           .bam 
 #
 # Purpose: Produce a '.sam' file from a '.bam' file. 
-#
-#   *** NOTE *** Input files are always kept. No way via this
-#       script to automate their destruction. This was done to
-#       avoid the risk of deleting the original '.BAM' files.
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
+# PYTHON PACKAGES #
+#------------------
 
 # Used for system calls.
 from subprocess import call
 
 # Used for timestamping the log files.
 from time import localtime, strftime
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 # SNAKEMAKE RULE #
+#-----------------
 rule sam2BAM:
     input:
-        inputSAM = "{pathS2B}/{sampleS2B}.sam"
+        inputSAM = expand("{samINDIR}/{{sampleS2B}}.sam",  samINDIR=config["samINDIR"])
     output:
-        outputBAM = temp("{pathS2B}/{sampleS2B}.bam")
+        outputBAM = temp(expand("{samOUTDIR}/{{sampleS2B}}.bam",  samOUTDIR=config["samOUTDIR"]))
     wildcard_constraints:
         sampleS2B = config["sampleREGEX"]
     log:
         stdErr = "log/" + config["bamGenDIR"] + '/sam2BAM/sam2BAM_{sampleS2B}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.samtools.stderr'
     run:
         # 1.A - Base call string.
-        callString=config["bamGen_samtoolsProg"] + ' view ' + config["sam2BamARGS"] + ' ' + str(input.inputSAM) + ' > ' + str(output.outputBAM)
+        callString=config["bamGen_samtoolsProg"] + ' view -bS ' + config["sam2BamARGS"] + ' ' + str(input.inputSAM) + ' > ' + str(output.outputBAM)
         
         # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
         if config["offCluster"]:

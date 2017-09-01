@@ -37,7 +37,7 @@ rule fixmateBAM:
     output:
         fixmateBAM = temp("{pathFMB}/{sampleFMB}_fixmate.bam")
     params:
-        picardARGS = config["picardValStringency"] + ' ' + config["picardMaxRec"]
+        picardARGS = config["bamUtil_picardValStringency"] + ' ' + config["bamUtil_picardMaxRec"]
     log:
         stdErr = "log/" + config["bamUtilDIR"] + '/fixmateBAM/fixmateBAM_{sampleFMB}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
     run:

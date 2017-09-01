@@ -67,7 +67,6 @@ with open(argv[1], "a+") as yamlTARGET:
     # 2A. Software
     bamMetrics_samtoolsProg="bamMetrics_samtoolsProg: samtools\n"
     bamMetrics_picardProg="bamMetrics_picardProg: java -Xmx4G -jar /extscratch/clc/usr/anaconda/4.3.0/envs/CentOS5-Compatible/share/picard-2.9.0-0/picard.jar\n"
-    bamMetrics_RScriptProg="bamMetrics_RScriptProg: /extscratch/clc/usr/R/3.1.2/bin/Rscript\n"
     # 2B. Shared variables
     bamMetricsDIR="bamMetricsDIR: bamMetrics\n"
     bamMetricsPicardValStringency="bamMetricsPicardValStringency: VALIDATION_STRINGENCY=LENIENT\n"
@@ -96,7 +95,7 @@ with open(argv[1], "a+") as yamlTARGET:
         "# " + moduleNAME + " Parameters\n"
         "#####################################\n"
         "#----------------------------------------------------------------- *Software* ------------------------------------------------------------------------\n" +
-        bamMetrics_samtoolsProg + bamMetrics_picardProg + bamMetrics_RScriptProg +
+        bamMetrics_samtoolsProg + bamMetrics_picardProg +
         "#----------------------------------------------------------------- *Shared Variables* ----------------------------------------------------------------\n" +
         bamMetricsDIR + bamMetricsPicardValStringency + bamMetricsPicardMexRec +
         "#----------------------------------------------------------------- collectGCBias ---------------------------------------------------------------------\n" +
@@ -164,7 +163,8 @@ with open(argv[2], "w+") as jsonTARGET:
 # Open and append o file a descriptin and the last rule call.
 with open(argv[3], "a+") as pipeTARGET:
     pipeTARGET.write(
-        "\n\n#***** " + moduleNAME + " *****\n"
+        "\n\n#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
+        "#***** " + moduleNAME + " *****\n"
         "#  Included:\n"
         "#    " + moduleNAME + ":     Generated mpileup file from BAM file.\n"
         "#  Files:\n"

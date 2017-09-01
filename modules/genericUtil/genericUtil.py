@@ -96,7 +96,7 @@ with open(argv[3], "a+") as pipeTARGET:
         "#      tableMERGE_ADAPTOR:         Merge '.txt' tables, copying over the header line of the first file.\n"
         'include: "' + path.dirname(path.realpath(__file__)) + '/' + moduleNAME + '_INCLUDE"\n'
         "#  Call via: \n"
-        '#tableMERGE:   expand("{outputDIR}/{tableMergeDIR}/all.samples.{vcfProgram}.{form[1][varType]}{form[1][annotated]}.txt", outputDIR=config["outputDIR"], tableMergeDIR=config["outputMergeLocation"], samples=config["sample"], vcfProgram=config["vcfProgram"], form=read_table(StringIO(config["sampleFORM"]), " ").iterrows())\n'
+        '#tableMERGE:   expand("{outputDIR}/{tableMergeDIR}/all.samples.{vcfProgram}.{form[1][varType]}{form[1][annotated]}.txt", outputDIR=config["outputDIR"], tableMergeDIR=config["outputMergeLocation"], samples=config["sample"], vcfProgram=config["vcfProgram"], form=read_table(StringIO(config["sampleFORM"]), " ").iterrows()),\n'
         "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
     )
 #-----------------------------------------------------------------------------------------------------------------------------------------------------

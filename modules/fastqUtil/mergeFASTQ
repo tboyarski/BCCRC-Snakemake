@@ -97,7 +97,7 @@ rule mergeFASTQ:
         # Contain at most 1 copy of '.gz'
         compressionSuffix = config["fastqCompressionSuffixREGEX"]
     log:
-        stdErr = "log/" + config["fastqUtilDIR"] + '/mergeFASTQ_PairedReadGz/mergeFASTQ_PairedReadGz_{sampleFM}.{readDirection}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+        stdErr = "log/" + config["fastqUtilDIR"] + '/mergeFASTQ/mergeFASTQ_{sampleFM}.{readDirection}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
     run:
         # 1.A - Base call string.
         callString='cat ' + str(input.fastqPartList) + ' > ' + str(output.mergedFastq)

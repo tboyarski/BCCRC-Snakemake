@@ -1,0 +1,33 @@
+name: CentOS6-Compatible
+channels:
+- biobuilds
+- bioconda-legacy
+- conda-forge
+- bioconda
+- defaults
+dependencies:
+- biobambam
+- bwa
+- java-jdk
+- picard
+- samtools
+- snakemake
+- snpeff
+- star
+- star-fusion
+- varscan
+- vcftools
+- perl
+- drmaa
+- gcc
+- libgcc
+- numpy
+- openssl
+- pandas
+- pip
+- python
+- yaml
+- zlib
+- graphviz
+prefix: /home/tboyarski/share/usr/anaconda/4.3.0/envs/CentOS6-Compatible
+

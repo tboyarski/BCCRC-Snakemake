@@ -62,7 +62,7 @@ with open(argv[1], "a+") as yamlTARGET:
     bamGen_fastxProg="bamGen_fastxProg: /genesis/extscratch/clc/usr/fastx_toolkit-0.0.13.2/bin/fastx_trimmer\n"
     bamGen_samtoolsProg="bamGen_samtoolsProg: samtools\n"
     bamGen_starProg="bamGen_starProg: STAR\n"
-    SoftwareChoiceFLAG_alignBAM="SoftwareChoiceFLAG_alignBAM: bwa\n"
+    SoftwareChoiceFLAG_bamALIGN="SoftwareChoiceFLAG_bamALIGN: bwa\n"
     # 2B. Shared variables
     bamGenDIR="bamGenDIR: bamGen\n"
     # 2C. bamALIGN_bwa variables
@@ -88,8 +88,9 @@ with open(argv[1], "a+") as yamlTARGET:
     outSAMstrandField="outSAMstrandField: --outSAMstrandField intronMotif\n"
     outputSuffixLIST_star="outputSuffixLIST_star: ['_Chimeric.out.sam','_Log.final.out','_Log.out','_Log.progress.out','_ReadsPerGene.out.tab','_SJ.out.tab']\n"
     # 2C. sam2BAM variables
-    sam2BamARGS="sam2BamARGS: -bS\n"
-    samDIR="samDIR: sam\n"
+    sam2BamARGS="sam2BamARGS: ''\n"
+    samINDIR="samDIR: xx/sam\n"
+    samOUTDIR="samDIR: xx/sam\n"
     # 2D. Write to file
     yamlTARGET.write(
         "\n\n"
@@ -97,7 +98,7 @@ with open(argv[1], "a+") as yamlTARGET:
         "# " + moduleNAME + " Parameters\n"
         "#####################################\n"
         "#----------------------------------------------------------------- *Software* ------------------------------------------------------------------------\n" +
-        bamGen_bwaProg + bamGen_fastxProg + bamGen_samtoolsProg + bamGen_starProg + SoftwareChoiceFLAG_alignBAM +
+        bamGen_bwaProg + bamGen_fastxProg + bamGen_samtoolsProg + bamGen_starProg + SoftwareChoiceFLAG_bamALIGN +
         "#----------------------------------------------------------------- *Shared Variables* ----------------------------------------------------------------\n" +
         bamGenDIR +
         "#----------------------------------------------------------------- bamALIGN_bwa ----------------------------------------------------------------------\n" +
@@ -144,9 +145,9 @@ with open(argv[3], "a+") as pipeTARGET:
         'include: "' + path.dirname(path.realpath(__file__)) + '/' + moduleNAME + '_INCLUDE"\n'
         "#  Required: NONE\n"
         "#  Call via:\n"
-        '#bamALIGN_bwa:             expand("{outputDIR}/{bamDIR}/{samples}_Aligned.out.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"])\n'
-        '#bamALIGN_star:            expand("{outputDIR}/{bamDIR}/{samples}_Aligned.out.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"])\n'
-        '#sam2BAM:                  expand("{inputDIR}/{rawBamDIR}/{samples}.bam", inputDIR=config["inputDIR"], rawBamDIR=config["rawBamDIR"], samples=config["sample"])\n'
+        '#bamALIGN_bwa:             expand("{outputDIR}/{bamDIR}/{samples}_Aligned.out.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"]),\n'
+        '#bamALIGN_star:            expand("{outputDIR}/{bamDIR}/{samples}_Aligned.out.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"]),\n'
+        '#sam2BAM:                  expand("{outputDIR}/{bamDIR}/{samples}.bam", outputDIR=config["outputDIR"], bamDIR=config["bamDIR"], samples=config["sample"]),\n'
         "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
     )
 #-----------------------------------------------------------------------------------------------------------------------------------------------------

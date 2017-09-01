@@ -23,13 +23,13 @@
 #                                  Include all required Snakefiles.                                    #
 ########################################################################################################
 
-if config["SoftwareChoiceFLAG_alignBAM"] == "STAR":
+if config["SoftwareChoiceFLAG_bamALIGN"] == "STAR":
     include: "bamALIGN_star"
-    # alignBAM_star - Generation of a '.bam' file from paired '.fastq' files, via STAR.
+    # bamALIGN_star - Generation of a '.bam' file from paired '.fastq' files, via STAR.
     ruleorder: bamALIGN_star > sam2BAM
 else:
     include: "bamALIGN_bwa"
-    # alignBAM_bwa - Generation of a '.bam' file from paired '.fastq' files, via BWA
+    # bamALIGN_bwa - Generation of a '.bam' file from paired '.fastq' files, via BWA
     ruleorder: bamALIGN_bwa > sam2BAM
 
 include: "sam2BAM"

@@ -24,7 +24,7 @@
 #   **NOTE** Newer versions of Samtools (E.g. 1.4.1) require
 #       different arguments for sorted (Line 55). Use the following 
 #       replacement line when using newer versions of samtools
-#       callString += ' | ' + config["fastqGen_samtoolsProg"] + ' sort -n -m ' + str(config["samtoolsSortMem"]) + ' - -T' + str(params.logNAME) + '.namesort'
+#       callString += ' | ' + config["fastqGen_samtoolsProg"] + ' sort -n -m ' + str(config["fastqGen_fastqGen_samtoolsSortMem"]) + ' - -T' + str(params.logNAME) + '.namesort'
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 # PYTHON PACKAGES #
 #------------------
@@ -44,9 +44,9 @@ rule bam2fastq_picard:
     input: 
         inputBAM = expand("{inputDIR}/{rawBamDIR}/{{sampleB2FP}}.bam", inputDIR=config["inputDIR"], rawBamDIR=config["rawBamDIR"])
     output:
-        fastqPair = temp(expand("{outputDIR}/{fastqDIR}/{{sampleB2FP}}.{readDirection}.fastq", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], readDirection=["1", "2"]))
+        fastqPair = expand("{outputDIR}/{fastqDIR}/{{sampleB2FP}}.{readDirection}.fastq", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], readDirection=["1", "2"])
     params:
-        picardARGS=config["picardValStringency"] + ' ' + config["picardMaxRec"]
+        picardARGS=config["fastqGen_picardValStringency"] + ' ' + config["fastqGen_picardMaxRec"]
     log:
         stdErr_vendorFailedReads = "log/" + config["fastqGenDIR"] + '/bam2fastq_picard/bam2fastq_picard_{sampleB2FP}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.vendor_failed_reads.log',
         stdErr_nameSort = "log/" + config["fastqGenDIR"] + '/bam2fastq_picard/bam2fastq_picard_{sampleB2FP}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.namesort.stderr',
@@ -60,7 +60,7 @@ rule bam2fastq_picard:
             callString += ' 2> '  + str(log.stdErr_vendorFailedReads)
 
         # 1.C - Continuation of base call by piping data into sorting algorithm.
-        callString += ' | ' + config["fastqGen_samtoolsProg"] + ' sort -no -m ' + str(config["samtoolsSortMem"]) + ' - ' + str(log.stdErr_nameSort)[:-7]
+        callString += ' | ' + config["fastqGen_samtoolsProg"] + ' sort -no -m ' + str(config["fastqGen_fastqGen_samtoolsSortMem"]) + ' - ' + str(log.stdErr_nameSort)[:-7]
         
         # 1.D - Differing output redirection as when not on cluster we cannot use the cluster config file.
         if config["offCluster"]:

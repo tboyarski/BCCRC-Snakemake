@@ -1,2 +1,3 @@
-normal tumor
-Pfeiffer2 Pfeiffer3
+tumor normal
+Pfeiffer2T Pfeiffer2N
+Pfeiffer3T Pfeiffer3N

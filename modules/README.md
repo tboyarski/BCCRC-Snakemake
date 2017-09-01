@@ -5,9 +5,7 @@ in a repeatable manner. The structure begins by creating a directory named after
 to create. The directory should include only a single module, or a group of highly correlated modules.
 The directory (E.g MyMod/) then must contain the following:
 
-
-**Sample names must not contain '_' or '-', Ideally they are alphanumeric.**
-
+**BasicPipelineExample.svg is to be a visualize aid for when designing pipelines with this system**
 
 ### Python Modules
 * **README.md** - (Markdown) ~ Describe what the module does.

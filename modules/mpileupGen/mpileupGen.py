@@ -104,8 +104,8 @@ with open(argv[3], "a+") as pipeTARGET:
         'include: "' + path.dirname(path.realpath(__file__)) + '/' + moduleNAME + '_INCLUDE"\n'
         "#  Required: NONE\n"
         "#  Call via: \n"
-        '#bam2mpileup:      expand("{outputDIR}/{mpileupDIR}/{samples}.mpileup", outputDIR=config["outputDIR"], mpileupDIR=config["mpileupDIR"], samples=config["sample"])\n'
-        '#bam2mpileupCHR:   expand("{outputDIR}/{mpileupDIR}/{samples}_{chrLIST}.mpileup", outputDIR=config["outputDIR"], mpileupDIR=config["mpileupDIR"], samples=config["sample"], chrLIST=config["chrLIST"])\n'
+        '#bam2mpileup:      expand("{outputDIR}/{mpileupDIR}/{samples}.mpileup", outputDIR=config["outputDIR"], mpileupDIR=config["mpileupDIR"], samples=config["sample"]),\n'
+        '#bam2mpileupCHR:   expand("{outputDIR}/{mpileupDIR}/{samples}_{chrLIST}.mpileup", outputDIR=config["outputDIR"], mpileupDIR=config["mpileupDIR"], samples=config["sample"], chrLIST=config["chrLIST"]),\n'
         '#-----------------------------------------------------------------------------------------------------------------------------------------------------\n'
     )
 #-----------------------------------------------------------------------------------------------------------------------------------------------------

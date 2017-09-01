@@ -10,7 +10,7 @@
 # Purpose: Produce a name sorted '.BAM' file using biobambam.   
 #
 #   **NOTE** Here is the call string for samtools v0.1.18
-#   callString=config["bamUtil_samtoolsProg"] + ' sort -on -m ' + str(config["samtoolsSortMem"]) \
+#   callString=config["bamUtil_samtoolsProg"] + ' sort -on -m ' + str(config["bamUtil_samtoolsSortMem"]) \
 #   + ' ' + str(input.inputBAM) + ' tempfile > ' + str(output.namesortBAM)
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 # PYTHON PACKAGES #
@@ -36,7 +36,7 @@ rule namesortBAM_samtools:
         stdErr = "log/" + config["bamDIR"] + '/namesortBAM_samtools/namesortBAM_samtools_{sampleNSBS}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.samtools.stderr'
     run:
         # 1.A Base call string.
-        callString=config["bamUtil_samtoolsProg"] + ' sort -on -m ' + str(config["samtoolsSortMem"]) + ' ' + str(input.inputBAM) + ' tempfile > ' + str(output.namesortBAM)
+        callString=config["bamUtil_samtoolsProg"] + ' sort -on -m ' + str(config["bamUtil_samtoolsSortMem"]) + ' ' + str(input.inputBAM) + ' tempfile > ' + str(output.namesortBAM)
 
         # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
         if config["offCluster"]:

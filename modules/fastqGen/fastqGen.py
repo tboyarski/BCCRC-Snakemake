@@ -62,9 +62,9 @@ with open(argv[1], "a+") as yamlTARGET:
     fastqGenDIR="fastqGenDIR: fastqGen\n"
     # 2C. bam2fastq variables
     rawBamDIR="rawBamDIR: rawBam\n"
-    samtoolsSortMem="samtoolsSortMem: 4000000000\n"
-    picardValStringency="picardValStringency: VALIDATION_STRINGENCY=LENIENT\n"
-    picardMaxRec="picardMaxRec: MAX_RECORDS_IN_RAM=5000000\n"
+    fastqGen_fastqGen_samtoolsSortMem="fastqGen_fastqGen_samtoolsSortMem: 4000000000\n"
+    fastqGen_picardValStringency="fastqGen_picardValStringency: VALIDATION_STRINGENCY=LENIENT\n"
+    fastqGen_picardMaxRec="fastqGen_picardMaxRec: MAX_RECORDS_IN_RAM=5000000\n"
     # 2D. Write to file
     yamlTARGET.write(
         "\n\n"
@@ -76,7 +76,7 @@ with open(argv[1], "a+") as yamlTARGET:
         "#----------------------------------------------------------------- *Shared Variables* ----------------------------------------------------------------\n" +
         fastqGenDIR +
         "#----------------------------------------------------------------- bam2fastq_picard ------------------------------------------------------------------\n" +
-        rawBamDIR + samtoolsSortMem + picardValStringency + picardMaxRec +
+        rawBamDIR + fastqGen_fastqGen_samtoolsSortMem + fastqGen_picardValStringency + fastqGen_picardMaxRec +
         "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
     )
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ with open(argv[3], "a+") as pipeTARGET:
         'include: "' + path.dirname(path.realpath(__file__)) + '/' + moduleNAME + '_INCLUDE"\n'
         "#  Required: NONE\n"
         "#  Call via:\n"
-        '#bam2fastq_picard:     expand("{outputDIR}/{fastqDIR}/{samples}.{readDirection}.fastq", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], samples=config["sample"], readDirection=["1", "2"])\n'
+        '#bam2fastq_picard:     expand("{outputDIR}/{fastqDIR}/{samples}.{readDirection}.fastq", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], samples=config["sample"], readDirection=["1", "2"]),\n'
         "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
     )
 #-----------------------------------------------------------------------------------------------------------------------------------------------------

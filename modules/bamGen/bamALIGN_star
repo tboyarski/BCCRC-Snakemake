@@ -3,9 +3,18 @@
 # Date:	    2017-06-12
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 # Call: call("python " + snakeDIR + "/modules/bamGen/bamGen.py " + YAMLFILE + " " + CLUSTERFILE + " " + SNAKEFILE, shell=True)
-# Input:                                    {sample}.bam   
+# Input:                                    {sample}.{readDirection}.fastq.gz
 #
-# Output:                                   {sample}_junctions.txt   
+# Output:                                   junctions/{sample}_junctions.txt --SYM-LINK--> {sampleBAS}_Chimeric.out.junction  
+#                                           {sampleBAS}_Chimeric.out.junction
+#                                           {sample}_Aligned.out.bam
+#                                           {sample}_Chimeric.out.sam
+#                                           {sample}_Log.final.out
+#                                           {sample}_Log.out
+#                                           {sample}_Log.progress.out
+#                                           {sample}_ReadsPerGene.out.tab
+#                                           {sample}_SJ.out.tab']
+#
 #
 # Purpose: Generate an Aligned '.bam' file from a pair of '.fastq' files. Also
 #   produces additional output data files regarding various data metrics.
@@ -34,7 +43,7 @@
 #       program would hang. It produces no errors, but does not seem able to 
 #       progress beyond that point. Not the following timings, loading the 
 #       genome should not take more than 5 minutes. Check the log files to see
-#       that alignBAM_star has progress past this point:
+#       that bamALIGN_star has progress past this point:
 #           Jun 21 13:34:41 ..... loading genome
 #           Jun 21 13:35:22 ..... processing annotations GTF
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -77,7 +86,7 @@ rule bamALIGN_star:
             +config["outSAMstrandField"],
         outFileNamePrefixDIR = config["outputDIR"]+'/'+config["bamDIR"],
     log:
-        stdErr = "log/" + config["bamGenDIR"] + '/alignBAM_star/alignBAM_star_{sampleBAS}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
+        stdErr = "log/" + config["bamGenDIR"] + '/bamALIGN_star/bamALIGN_star_{sampleBAS}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
     run: 
         # 1.A Base call string.
         callString = config["bamGen_starProg"] + ' ' + str(params.baseARGS) + ' --readFilesIn ' + str(input.fastqGzPair) \

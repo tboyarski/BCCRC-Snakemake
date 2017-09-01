@@ -31,7 +31,7 @@ rule cleanBAM:
     output:
         cleanBAM = temp("{pathCB}/{sampleCB}_clean.bam")
     params:
-        picardARGS=config["picardValStringency"] + ' ' + config["picardMaxRec"]
+        picardARGS=config["bamUtil_picardValStringency"] + ' ' + config["bamUtil_picardMaxRec"]
     log:
         stdErr = "log/" + config["bamUtilDIR"] + '/cleanBAM/cleaBAM_{sampleCB}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
     run:

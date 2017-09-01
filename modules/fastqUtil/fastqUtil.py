@@ -23,22 +23,6 @@ moduleNAME = "fastqUtil"
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
-##################################################
-# fieldGenerator
-##################################################
-# Function to generate the combination of arguments for vcfGenFields(Paired) variable written to '.YAML' file.
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-def fieldGenerator(flagLIST, sampleLIST):
-    finalString = ""
-    for flag in flagLIST:
-        for sample in sampleLIST:
-            finalString += 'GEN[' + sample + "]." + flag + " "
-    return finalString
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
 # PYTHON SCRIPT #
 #----------------
@@ -125,15 +109,17 @@ with open(argv[2], "w+") as jsonTARGET:
 # Open and append o file a descriptin and the last rule call.
 with open(argv[3], "a+") as pipeTARGET:
     pipeTARGET.write(
-        "\n\n#***** " + moduleNAME + " *****\n"
+        "\n\n#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
+        "#***** " + moduleNAME + " *****\n"
         "#  Included:\n"
         "#      fastq2GZ:                   Run perl QC script and convert a '.bam' file into a '.fastq.zip'\n"
         "#      fastqc:                     Compress a '.fastq' file into a '.fastq.gz' file\n"
         "#      mergeFASTQ_ADAPTOR:         Produce a single '.fastq' file from a list of '.fastq' files.\n"
         'include: "' + path.dirname(path.realpath(__file__)) + '/' + moduleNAME + '_INCLUDE"\n'
         "#  Call via: \n"
-        '#fastq2GZ:             expand("{outputDIR}/{fastqDIR}/{samples}.{readDirection}.fastq.gz", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], samples=config["sample"], readDirection=["1", "2"])\n'
-        '#fastqc:               expand("{outputDIR}/{fastqcDIR}/{samples}_fastqc.zip", outputDIR=config["outputDIR"], fastqcDIR=config["fastqcDIR"], samples=config["sample"])\n'
-        '#mergeFASTQ:           expand("{outputDIR}/{fastqDIR}/{samples}.{readDirection}.fastq{compressionSuffix}", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], samples=config["sample"], readDirection=["1","2"], compressionSuffix=[".gz"])\n'
+        '#fastq2GZ:             expand("{outputDIR}/{fastqDIR}/{samples}.{readDirection}.fastq.gz", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], samples=config["sample"], readDirection=["1", "2"]),\n'
+        '#fastqc:               expand("{outputDIR}/{fastqcDIR}/{samples}_fastqc.zip", outputDIR=config["outputDIR"], fastqcDIR=config["fastqcDIR"], samples=config["sample"]),\n'
+        '#mergeFASTQ:           expand("{outputDIR}/{fastqDIR}/{samples}.{readDirection}.fastq{compressionSuffix}", outputDIR=config["outputDIR"], fastqDIR=config["fastqDIR"], samples=config["sample"], readDirection=["1","2"], compressionSuffix=[".gz"]),\n'
+        "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
     )
 #-----------------------------------------------------------------------------------------------------------------------------------------------------

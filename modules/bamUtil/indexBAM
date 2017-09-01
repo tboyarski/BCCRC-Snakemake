@@ -36,8 +36,7 @@ rule indexBAM:
     input:
         inputBAM = expand("{{outputDIR}}/{bamDIR}/{{sampleIB}}{fileTag}.bam", bamDIR=config["bamDIR"], fileTag=config["fileTag"])
     output:
-        outputBAI = expand("{{outputDIR}}/{bamDIR}/{{sampleIB}}{fileTag}.bam.bai",  bamDIR=config["bamDIR"], fileTag=config["fileTag"]),
-        symLinkedBAI = expand("{{outputDIR}}/{bamDIR}/{{sampleIB}}.bam.bai", bamDIR=config["bamDIR"]),
+        outputBAI = expand("{{outputDIR}}/{bamDIR}/{{sampleIB}}.bam.bai",  bamDIR=config["bamDIR"], fileTag=config["fileTag"]),
         symLinkedBAM = expand("{{outputDIR}}/{bamDIR}/{{sampleIB}}.bam", bamDIR=config["bamDIR"])
     wildcard_constraints:
         # Wildcard cannont contain a '_'
@@ -45,29 +44,24 @@ rule indexBAM:
     log:
         stdErr = "log/" + config["bamUtilDIR"] + '/indexBAM/indexBAM_{sampleIB}.' + strftime("%Y-%m-%d.%H-%M-%S", localtime()) + '.stderr'
     run:
-        # 1.A - Base call string.
-        callString=config["bamUtil_samtoolsProg"] + ' index ' + str(input.inputBAM) + ' ' + str(output.outputBAI)
-
+        # 1.A - Creating a hard-link of the finalized output '.bam' to be used to rename the output, to 
+        #   provide better controlflow and to remove the bamUtil module processing tags from the file name.
+        #   The temp() function used on this rules input '.bam' (in previous rule), will ensure the processed
+        #   '.bam' file is removed, leaving only the {sample}.bam file, with the named annotations only 
+        #   available in the 'bai/' directory.
+        callString = 'ln -f ' + getcwd() + '/' + str(input.inputBAM) + ' ' + getcwd() + '/' + str(output.symLinkedBAM)
+        
         # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
         if config["offCluster"]:
             callString += ' 2> ' + str(log.stdErr)
+        
+        # 1.B - Index the newly created file.
+        callString += ' && ' + config["bamUtil_samtoolsProg"] + ' index ' + str(output.symLinkedBAM) + ' ' + str(output.outputBAI)
 
-        # 1.C - Creating a symlink of the finalized output '.bam.bai' to be placed in a different directory 
-        #   for better controlflow and to remove the bamUtil module processing tags from the file name.
-        callString += ' && ln -fs ' + getcwd() + '/' + str(output.outputBAI) + ' ' + getcwd() + '/' + str(output.symLinkedBAI)
-        
-        # 1.D - Differing output redirection as when not on cluster we cannot use the cluster config file.
+        # 1.B - Differing output redirection as when not on cluster we cannot use the cluster config file.
         if config["offCluster"]:
             callString += ' 2>> ' + str(log.stdErr)
-        
-        # 1.E - Creating a symlink of the finalized output '.bam' to be placed in a different directory 
-        #   for better controlflow and to remove the bamUtil module processing tags from the file name.
-        callString += ' && ln -fs ' + getcwd() + '/' + str(input.inputBAM) + ' ' + getcwd() + '/' + str(output.symLinkedBAM)
-        
-        # 1.F - Differing output redirection as when not on cluster we cannot use the cluster config file.
-        if config["offCluster"]:
-            callString += ' 2>> ' + str(log.stdErr)
-        
+
         # 2.A -  Printing system calls to a local file, and then executing them.
         call('echo "#' + str(log.stdErr)[:-7] + ':\n#' + callString + '\n" >> ' + config["shellCallFile"], shell=True)
         call(callString, shell=True)

@@ -38,7 +38,7 @@ def getModuleList():
     moduleList=listdir((path.dirname(getcwd())))
 
     # Remove all the things I don't want to the user seeing. List won't likely change.
-    for omittedFileName in ['README.md', 'SnakeTricks.md', 'TEMPLATE', 'startHERE', 'buildFile']:
+    for omittedFileName in ['README.md', 'SnakeTricks.md', 'TEMPLATE', 'py_startHERE', 'py_buildFile']:
         if omittedFileName in moduleList:
             moduleList.remove(omittedFileName)
     return moduleList

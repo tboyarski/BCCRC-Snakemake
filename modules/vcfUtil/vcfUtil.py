@@ -161,9 +161,9 @@ with open(argv[3], "a+") as pipeTARGET:
         "#  Required:   vcfProgram to be set in YAML to the name of the program used to create the '.vcf's'\n"
         "#              vcfUtilDIR to be set in YAML to directory which produced the '.vcf's'\n"
         "#  Call via: \n"
-        '#getVcfTable:      expand("{outputDIR}/{pathGVCFT}/tables/{samples}.{vcfProgram}.{form[1][varType]}{form[1][annotated]}.txt", outputDIR=config["outputDIR"], pathGVCFT=config["vcfGenUtil_varScanDIR"], samples=config["sample"], vcfProgram=config["vcfProgram"], form=read_table(StringIO(config["sampleFORM"]), " ").iterrows())\n'
-        '#mergeVCF:         expand("{outputDIR}/{pathMVCF}/{samples}.{vcfProgram}.{varType}.vcf", outputDIR=config["outputDIR"], pathMVCF=config["vcfGenUtil_varScanDIR"], samples=config["sample"], vcfProgram=config["vcfProgram"], varType=config["varType"])\n'
-        '#sortVCF:          expand("{outputDIR}/{pathSVCF}/{samples}_sorted.{vcfProgram}.{varType}.vcf", outputDIR=config["outputDIR"], pathSVCF=config["vcfGenUtil_varScanDIR"], samples=config["sample"], vcfProgram=config["vcfProgram"], varType=config["varType"])\n'
+        '#getVcfTable:      expand("{outputDIR}/{pathGVCFT}/tables/{samples}.{vcfProgram}.{form[1][varType]}{form[1][annotated]}.txt", outputDIR=config["outputDIR"], pathGVCFT=config["vcfGenUtil_varScanDIR"], samples=config["sample"], vcfProgram=config["vcfProgram"], form=read_table(StringIO(config["sampleFORM"]), " ").iterrows()),\n'
+        '#mergeVCF:         expand("{outputDIR}/{pathMVCF}/{samples}.{vcfProgram}.{varType}.vcf", outputDIR=config["outputDIR"], pathMVCF=config["vcfGenUtil_varScanDIR"], samples=config["sample"], vcfProgram=config["vcfProgram"], varType=config["varType"]),\n'
+        '#sortVCF:          expand("{outputDIR}/{pathSVCF}/{samples}_sorted.{vcfProgram}.{varType}.vcf", outputDIR=config["outputDIR"], pathSVCF=config["vcfGenUtil_varScanDIR"], samples=config["sample"], vcfProgram=config["vcfProgram"], varType=config["varType"]),\n'
         "#-----------------------------------------------------------------------------------------------------------------------------------------------------\n"
     )
 #-----------------------------------------------------------------------------------------------------------------------------------------------------
